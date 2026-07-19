@@ -1,0 +1,246 @@
+{
+  "nodes": [
+    {
+      "id": "python-basics",
+      "name": "Python基础",
+      "description": "Python语言的基础语法和核心概念",
+      "category": "基础语法",
+      "importance": 10,
+      "prerequisites": []
+    },
+    {
+      "id": "variables",
+      "name": "变量与数据类型",
+      "description": "Python中的变量声明和基本数据类型",
+      "category": "基础语法",
+      "importance": 8,
+      "prerequisites": ["python-basics"]
+    },
+    {
+      "id": "operators",
+      "name": "运算符",
+      "description": "算术、比较、逻辑运算符的使用",
+      "category": "基础语法",
+      "importance": 7,
+      "prerequisites": ["variables"]
+    },
+    {
+      "id": "control-flow",
+      "name": "控制流",
+      "description": "条件语句和循环语句",
+      "category": "控制流",
+      "importance": 9,
+      "prerequisites": ["operators"]
+    },
+    {
+      "id": "functions",
+      "name": "函数",
+      "description": "函数定义、参数、返回值",
+      "category": "函数",
+      "importance": 9,
+      "prerequisites": ["control-flow"]
+    },
+    {
+      "id": "lists",
+      "name": "列表",
+      "description": "列表的创建、操作和常用方法",
+      "category": "数据类型",
+      "importance": 8,
+      "prerequisites": ["variables"]
+    },
+    {
+      "id": "dictionaries",
+      "name": "字典",
+      "description": "字典的创建、操作和常用方法",
+      "category": "数据类型",
+      "importance": 8,
+      "prerequisites": ["variables"]
+    },
+    {
+      "id": "strings",
+      "name": "字符串",
+      "description": "字符串操作和格式化",
+      "category": "数据类型",
+      "importance": 7,
+      "prerequisites": ["variables"]
+    },
+    {
+      "id": "loops",
+      "name": "循环",
+      "description": "for循环和while循环",
+      "category": "控制流",
+      "importance": 8,
+      "prerequisites": ["control-flow"]
+    },
+    {
+      "id": "conditionals",
+      "name": "条件语句",
+      "description": "if-elif-else语句",
+      "category": "控制流",
+      "importance": 8,
+      "prerequisites": ["control-flow"]
+    },
+    {
+      "id": "oop",
+      "name": "面向对象编程",
+      "description": "类、对象、继承、多态",
+      "category": "面向对象",
+      "importance": 9,
+      "prerequisites": ["functions"]
+    },
+    {
+      "id": "classes",
+      "name": "类",
+      "description": "类的定义和实例化",
+      "category": "面向对象",
+      "importance": 8,
+      "prerequisites": ["oop"]
+    },
+    {
+      "id": "inheritance",
+      "name": "继承",
+      "description": "类的继承和方法重写",
+      "category": "面向对象",
+      "importance": 7,
+      "prerequisites": ["classes"]
+    },
+    {
+      "id": "modules",
+      "name": "模块与包",
+      "description": "模块导入和包管理",
+      "category": "模块与包",
+      "importance": 7,
+      "prerequisites": ["functions"]
+    },
+    {
+      "id": "file-io",
+      "name": "文件IO",
+      "description": "文件的读写操作",
+      "category": "文件IO",
+      "importance": 7,
+      "prerequisites": ["functions"]
+    },
+    {
+      "id": "exceptions",
+      "name": "异常处理",
+      "description": "try-except语句和自定义异常",
+      "category": "异常处理",
+      "importance": 7,
+      "prerequisites": ["functions"]
+    },
+    {
+      "id": "iterators",
+      "name": "迭代器",
+      "description": "迭代器协议和生成器",
+      "category": "迭代器与生成器",
+      "importance": 6,
+      "prerequisites": ["functions", "loops"]
+    },
+    {
+      "id": "generators",
+      "name": "生成器",
+      "description": "生成器函数和yield语句",
+      "category": "迭代器与生成器",
+      "importance": 6,
+      "prerequisites": ["iterators"]
+    },
+    {
+      "id": "decorators",
+      "name": "装饰器",
+      "description": "函数装饰器和类装饰器",
+      "category": "装饰器",
+      "importance": 6,
+      "prerequisites": ["functions", "oop"]
+    },
+    {
+      "id": "async",
+      "name": "异步编程",
+      "description": "async/await和异步IO",
+      "category": "异步编程",
+      "importance": 7,
+      "prerequisites": ["functions", "generators"]
+    },
+    {
+      "id": "networking",
+      "name": "网络编程",
+      "description": "socket编程和HTTP请求",
+      "category": "网络编程",
+      "importance": 6,
+      "prerequisites": ["functions", "exceptions"]
+    },
+    {
+      "id": "database",
+      "name": "数据库",
+      "description": "SQLAlchemy和数据库操作",
+      "category": "数据库",
+      "importance": 7,
+      "prerequisites": ["oop", "modules"]
+    },
+    {
+      "id": "fastapi",
+      "name": "FastAPI",
+      "description": "FastAPI框架和RESTful API",
+      "category": "Web框架",
+      "importance": 8,
+      "prerequisites": ["async", "database"]
+    },
+    {
+      "id": "testing",
+      "name": "测试",
+      "description": "单元测试和测试框架",
+      "category": "测试",
+      "importance": 7,
+      "prerequisites": ["functions", "oop"]
+    },
+    {
+      "id": "performance",
+      "name": "性能优化",
+      "description": "代码优化和性能分析",
+      "category": "性能优化",
+      "importance": 6,
+      "prerequisites": ["functions", "data-structures"]
+    }
+  ],
+  "edges": [
+    {"source": "python-basics", "target": "variables", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "variables", "target": "operators", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "operators", "target": "control-flow", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "control-flow", "target": "functions", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "variables", "target": "lists", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "variables", "target": "dictionaries", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "variables", "target": "strings", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "control-flow", "target": "loops", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "control-flow", "target": "conditionals", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "functions", "target": "oop", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "oop", "target": "classes", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "classes", "target": "inheritance", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "functions", "target": "modules", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "functions", "target": "file-io", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "functions", "target": "exceptions", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "functions", "target": "iterators", "relationType": "prerequisite", "strength": "soft"},
+    {"source": "loops", "target": "iterators", "relationType": "prerequisite", "strength": "soft"},
+    {"source": "iterators", "target": "generators", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "functions", "target": "decorators", "relationType": "prerequisite", "strength": "soft"},
+    {"source": "oop", "target": "decorators", "relationType": "prerequisite", "strength": "soft"},
+    {"source": "functions", "target": "async", "relationType": "prerequisite", "strength": "soft"},
+    {"source": "generators", "target": "async", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "functions", "target": "networking", "relationType": "prerequisite", "strength": "soft"},
+    {"source": "exceptions", "target": "networking", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "oop", "target": "database", "relationType": "prerequisite", "strength": "soft"},
+    {"source": "modules", "target": "database", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "async", "target": "fastapi", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "database", "target": "fastapi", "relationType": "prerequisite", "strength": "hard"},
+    {"source": "functions", "target": "testing", "relationType": "prerequisite", "strength": "soft"},
+    {"source": "oop", "target": "testing", "relationType": "prerequisite", "strength": "soft"},
+    {"source": "functions", "target": "performance", "relationType": "prerequisite", "strength": "soft"}
+  ],
+  "clusters": [
+    {"id": "basics", "name": "基础语法", "category": "基础语法", "nodeIds": ["python-basics", "variables", "operators"]},
+    {"id": "control", "name": "控制流", "category": "控制流", "nodeIds": ["control-flow", "loops", "conditionals"]},
+    {"id": "data", "name": "数据类型", "category": "数据类型", "nodeIds": ["lists", "dictionaries", "strings"]},
+    {"id": "func", "name": "函数", "category": "函数", "nodeIds": ["functions"]},
+    {"id": "object", "name": "面向对象", "category": "面向对象", "nodeIds": ["oop", "classes", "inheritance"]},
+    {"id": "advanced", "name": "高级特性", "category": "高级特性", "nodeIds": ["iterators", "generators", "decorators", "async"]},
+    {"id": "applied", "name": "应用开发", "category": "应用开发", "nodeIds": ["networking", "database", "fastapi", "testing", "performance"]}
+  ]
+}

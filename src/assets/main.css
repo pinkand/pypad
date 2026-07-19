@@ -1,0 +1,130 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+:root {
+  /* Morandi Color Palette */
+  --bg-primary: #F5F3F0;
+  --bg-secondary: #EDEAE6;
+  --bg-tertiary: #E4E0DB;
+  
+  /* Text */
+  --text-primary: #3D3B39;
+  --text-secondary: #7A7673;
+  --text-tertiary: #A8A4A0;
+  
+  /* Interactive (Light Blue - Morandi) */
+  --blue-primary: #8EAEC4;
+  --blue-hover: #7A9DB8;
+  --blue-active: #6B8EA8;
+  --blue-light: #D6E3ED;
+  --blue-glass: rgba(142, 174, 196, 0.15);
+  
+  /* Semantic (Morandi versions) */
+  --success: #9BBFA3;
+  --warning: #D4B896;
+  --danger: #C49A9A;
+  --info: #97B3C8;
+  
+  /* Mastery colors for 2D/3D */
+  --mastery-high: #9BBFA3;
+  --mastery-mid: #D4B896;
+  --mastery-low: #C49A9A;
+  
+  /* Borders & Shadows */
+  --border: rgba(61, 59, 57, 0.08);
+  --border-hover: rgba(142, 174, 196, 0.3);
+  --shadow-sm: 0 2px 8px rgba(61, 59, 57, 0.06);
+  --shadow-md: 0 8px 24px rgba(61, 59, 57, 0.08);
+  --shadow-glass: 0 8px 32px rgba(61, 59, 57, 0.1);
+
+  /* Border Radius (8x base) */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-full: 9999px;
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden; /* App is a full viewport experience */
+}
+
+/* Morandi Glassmorphism Utility */
+.glass {
+  background: rgba(245, 243, 240, 0.72);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-dark {
+  background: rgba(30, 30, 32, 0.72);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  color: #F5F3F0;
+}
+
+/* Custom Scrollbar for Morandi theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(61, 59, 57, 0.2);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 59, 57, 0.35);
+}
+
+/* Animations */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(142, 174, 196, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(142, 174, 196, 0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
