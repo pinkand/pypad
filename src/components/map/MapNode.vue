@@ -15,210 +15,65 @@ const props = defineProps<{
 }>()
 
 const masteryColor = computed(() => {
-  const m = props.data.mastery
-  if (m >= MASTERY_THRESHOLDS.excellent) return MASTERY_COLORS.excellent
-  if (m >= MASTERY_THRESHOLDS.good) return MASTERY_COLORS.good
+  const mastery = props.data.mastery
+  if (mastery >= MASTERY_THRESHOLDS.excellent) return MASTERY_COLORS.excellent
+  if (mastery >= MASTERY_THRESHOLDS.good) return MASTERY_COLORS.good
   return MASTERY_COLORS.weak
 })
 
 const importanceSize = computed(() => {
-  const base = 130
-  const extra = props.data.importance * 8
+  const base = 120
+  const extra = props.data.importance * 10
   return Math.min(base + extra, 200)
 })
-
-const masteryBarWidth = computed(() => `${Math.max(props.data.mastery, 4)}%`)
 </script>
 
 <template>
-  <div
-    class="map-node"
-    :class="{ 'map-node--selected': selected }"
-    :style="{
+  <div 
+    :class="[
+      'px-4 py-3 rounded-lg border-2 shadow-sm cursor-pointer transition-all duration-200',
+      selected ? 'border-blue-500 shadow-md' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+    ]"
+    :style="{ 
       minWidth: `${importanceSize}px`,
-      '--node-color': masteryColor,
-      '--node-glow': masteryColor + '44'
+      borderColor: selected ? '#3b82f6' : masteryColor + '40'
     }"
   >
-    <!-- Connection handles -->
-    <Handle type="target" :position="Position.Left" class="node-handle" />
+    <!-- 输入连接点 -->
+    <Handle type="target" :position="Position.Left" />
 
-    <!-- Node body -->
-    <div class="node-body">
-      <!-- Header row -->
-      <div class="node-header">
-        <h4 class="node-label">{{ data.label }}</h4>
-        <span class="node-mastery" :style="{ color: masteryColor, background: masteryColor + '22' }">
+    <!-- 节点内容 -->
+    <div class="flex flex-col">
+      <div class="flex items-center justify-between mb-1">
+        <h4 class="font-medium text-gray-900 dark:text-white text-sm">{{ data.label }}</h4>
+        <span 
+          class="px-1.5 py-0.5 text-xs font-medium rounded-full"
+          :style="{ 
+            backgroundColor: masteryColor + '20', 
+            color: masteryColor 
+          }"
+        >
           {{ data.mastery }}%
         </span>
       </div>
-
-      <!-- Description -->
-      <p class="node-desc">{{ data.description }}</p>
-
-      <!-- Mastery progress bar -->
-      <div class="node-progress">
-        <div
-          class="node-progress-fill"
-          :style="{ width: masteryBarWidth, background: masteryColor }"
-        />
-      </div>
-
-      <!-- Footer -->
-      <div class="node-footer">
-        <span class="node-category">{{ data.category }}</span>
-        <div class="node-stars">
-          <span
-            v-for="i in Math.min(data.importance, 5)"
+      
+      <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">
+        {{ data.description }}
+      </p>
+      
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-gray-400 dark:text-gray-500">{{ data.category }}</span>
+        <div class="flex space-x-1">
+          <span 
+            v-for="i in data.importance" 
             :key="i"
-            class="node-star"
-          >★</span>
+            class="w-1.5 h-1.5 rounded-full bg-yellow-400"
+          ></span>
         </div>
       </div>
     </div>
 
-    <!-- Selected glow ring -->
-    <div v-if="selected" class="selected-ring" />
-
-    <Handle type="source" :position="Position.Right" class="node-handle" />
+    <!-- 输出连接点 -->
+    <Handle type="source" :position="Position.Right" />
   </div>
 </template>
-
-<style scoped>
-.map-node {
-  position: relative;
-  background: rgba(10, 22, 40, 0.92);
-  border: 1px solid var(--node-color, #6366f1);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  overflow: hidden;
-}
-
-.map-node::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  box-shadow: 0 0 12px var(--node-glow, rgba(99,102,241,0.3));
-  opacity: 0.6;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
-}
-
-.map-node:hover::before {
-  opacity: 1;
-}
-
-.map-node:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 20px var(--node-glow, rgba(99,102,241,0.4));
-}
-
-.map-node--selected {
-  border-color: #818cf8 !important;
-  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3), 0 0 24px rgba(99, 102, 241, 0.4) !important;
-}
-
-/* Body */
-.node-body {
-  padding: 10px 12px;
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.node-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.node-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #e2e8f0;
-  line-height: 1.3;
-  flex: 1;
-}
-
-.node-mastery {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 20px;
-  flex-shrink: 0;
-  letter-spacing: 0.3px;
-}
-
-.node-desc {
-  font-size: 10px;
-  color: #475569;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Progress bar */
-.node-progress {
-  height: 3px;
-  background: rgba(30, 45, 74, 0.8);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.node-progress-fill {
-  height: 100%;
-  border-radius: 2px;
-  opacity: 0.85;
-  min-width: 4px;
-}
-
-/* Footer */
-.node-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.node-category {
-  font-size: 9px;
-  color: #334155;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.node-stars {
-  display: flex;
-  gap: 1px;
-}
-
-.node-star {
-  font-size: 8px;
-  color: #f59e0b;
-  opacity: 0.75;
-}
-
-/* Selected ring animation */
-.selected-ring {
-  position: absolute;
-  inset: -3px;
-  border-radius: 13px;
-  border: 1px solid rgba(129, 140, 248, 0.5);
-  animation: glow-pulse 2s ease-in-out infinite;
-  pointer-events: none;
-}
-
-/* Handle styles */
-:deep(.node-handle) {
-  width: 8px !important;
-  height: 8px !important;
-  background: var(--node-color, #6366f1) !important;
-  border: 1.5px solid rgba(10, 22, 40, 0.8) !important;
-}
-</style>

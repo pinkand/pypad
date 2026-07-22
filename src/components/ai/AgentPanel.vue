@@ -76,13 +76,15 @@ const tabs = [
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border);
-  background: rgba(245, 243, 240, 0.4);
+  background: rgba(255, 255, 255, 0.8);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
 }
 
 .tabs {
   display: flex;
   gap: 8px;
-  background: var(--border);
+  background: var(--bg-tertiary);
   padding: 4px;
   border-radius: var(--radius-lg);
 }
@@ -105,7 +107,7 @@ const tabs = [
 
 .tab-btn.active {
   background: var(--bg-primary);
-  color: var(--blue-active);
+  color: var(--text-primary);
   box-shadow: var(--shadow-sm);
 }
 

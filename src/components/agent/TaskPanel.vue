@@ -5,358 +5,149 @@ import type { Task } from '@/types/agent'
 
 const agentStore = useAgentStore()
 
-const statusConfig = {
-  pending:     { label: '待开始', class: 'badge-pending' },
-  in_progress: { label: '进行中', class: 'badge-in-progress' },
-  completed:   { label: '已完成', class: 'badge-completed' }
+const tasksByStatus = computed(() => {
+  return {
+    pending: agentStore.pendingTasks,
+    inProgress: agentStore.inProgressTasks,
+    completed: agentStore.completedTasks
+  }
+})
+
+const statusLabels = {
+  pending: '待开始',
+  in_progress: '进行中',
+  completed: '已完成'
 }
 
-const typeConfig: Record<string, { icon: string; color: string }> = {
-  learn:    { icon: '📚', color: '#818cf8' },
-  practice: { icon: '💻', color: '#34d399' },
-  debug:    { icon: '🐛', color: '#f87171' },
-  review:   { icon: '🔄', color: '#fbbf24' }
+const statusColors = {
+  pending: 'bg-white/80 text-gray-500 border border-black/5 shadow-sm',
+  in_progress: 'bg-[#007aff] text-white shadow-sm',
+  completed: 'bg-green-50 text-green-600 border border-green-100 shadow-sm'
+}
+
+const typeLabels = {
+  learn: '学习',
+  practice: '练习',
+  debug: '调试',
+  review: '复习'
+}
+
+const typeIcons = {
+  learn: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>',
+  practice: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>',
+  debug: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>',
+  review: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>'
 }
 
 const updateTaskStatus = (taskId: string, status: Task['status']) => {
   agentStore.updateTaskStatus(taskId, status)
 }
-
-const hasAnyTask = computed(() =>
-  agentStore.inProgressTasks.length > 0 ||
-  agentStore.pendingTasks.length > 0 ||
-  agentStore.completedTasks.length > 0
-)
 </script>
 
 <template>
-  <div class="task-panel">
-    <!-- Header -->
-    <div class="panel-head">
-      <div class="head-left">
-        <span class="head-icon">📋</span>
-        <h3 class="head-title">学习任务</h3>
-      </div>
-      <div class="task-counts">
-        <span v-if="agentStore.inProgressTasks.length" class="count-badge count-progress">
-          {{ agentStore.inProgressTasks.length }} 进行中
-        </span>
-        <span v-if="agentStore.pendingTasks.length" class="count-badge count-pending">
-          {{ agentStore.pendingTasks.length }} 待开始
-        </span>
-      </div>
+  <div class="flex flex-col h-full">
+    <!-- 头部 -->
+    <div class="p-4 border-b border-black/5 bg-white/40 backdrop-blur-md">
+      <h3 class="font-semibold text-gray-900">学习任务</h3>
+      <p class="text-sm text-gray-500">
+        {{ agentStore.pendingTasks.length }} 个待开始
+      </p>
     </div>
 
-    <!-- Task list -->
-    <div class="task-list">
-      <!-- In Progress -->
-      <div v-if="agentStore.inProgressTasks.length > 0" class="task-section">
-        <div class="section-label section-label--progress">
-          <div class="section-dot pulse-dot" />
-          进行中
-        </div>
-        <div
-          v-for="task in agentStore.inProgressTasks"
+    <!-- 任务列表 -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-3">
+      <!-- 进行中的任务 -->
+      <div v-if="agentStore.inProgressTasks.length > 0">
+        <h4 class="text-sm font-medium text-gray-500 mb-2 px-1">进行中</h4>
+        <div 
+          v-for="task in agentStore.inProgressTasks" 
           :key="task.id"
-          class="task-card task-card--progress"
+          class="p-4 bg-white/70 backdrop-blur-md rounded-xl border border-black/5 shadow-sm mb-3"
         >
-          <div class="task-top">
-            <div class="task-icon" :style="{ color: typeConfig[task.type]?.color }">
-              {{ typeConfig[task.type]?.icon }}
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2">
+              <span class="text-[#007aff] flex items-center" v-html="typeIcons[task.type]"></span>
+              <span class="font-medium text-gray-900">{{ task.title }}</span>
             </div>
-            <span class="task-title">{{ task.title }}</span>
-            <span :class="['task-badge', statusConfig[task.status].class]">
-              {{ statusConfig[task.status].label }}
+            <span :class="['px-2 py-1 text-xs rounded-full', statusColors[task.status]]">
+              {{ statusLabels[task.status] }}
             </span>
           </div>
-          <p class="task-desc">{{ task.description }}</p>
-          <div class="task-actions">
-            <button class="task-btn task-btn--complete" @click="updateTaskStatus(task.id, 'completed')">
-              ✓ 完成
+          <p class="text-sm text-gray-600 mb-3">{{ task.description }}</p>
+          <div class="flex space-x-2">
+            <button 
+              @click="updateTaskStatus(task.id, 'completed')"
+              class="px-3 py-1.5 text-xs bg-[#34c759] text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm"
+            >
+              完成
             </button>
-            <button class="task-btn task-btn--pause" @click="updateTaskStatus(task.id, 'pending')">
-              ⏸ 暂停
+            <button 
+              @click="updateTaskStatus(task.id, 'pending')"
+              class="px-3 py-1.5 text-xs bg-white text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              暂停
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Pending -->
-      <div v-if="agentStore.pendingTasks.length > 0" class="task-section">
-        <div class="section-label section-label--pending">
-          <div class="section-dot" style="background: #64748b;" />
-          待开始
-        </div>
-        <div
-          v-for="task in agentStore.pendingTasks"
+      <!-- 待开始的任务 -->
+      <div v-if="agentStore.pendingTasks.length > 0">
+        <h4 class="text-sm font-medium text-gray-500 mb-2 px-1">待开始</h4>
+        <div 
+          v-for="task in agentStore.pendingTasks" 
           :key="task.id"
-          class="task-card task-card--pending"
+          class="p-4 bg-white/40 backdrop-blur-md rounded-xl border border-black/5 shadow-sm mb-3"
         >
-          <div class="task-top">
-            <div class="task-icon" :style="{ color: typeConfig[task.type]?.color }">
-              {{ typeConfig[task.type]?.icon }}
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400 flex items-center" v-html="typeIcons[task.type]"></span>
+              <span class="font-medium text-gray-900">{{ task.title }}</span>
             </div>
-            <span class="task-title">{{ task.title }}</span>
-            <span :class="['task-badge', statusConfig[task.status].class]">
-              {{ statusConfig[task.status].label }}
+            <span :class="['px-2 py-1 text-xs rounded-full', statusColors[task.status]]">
+              {{ statusLabels[task.status] }}
             </span>
           </div>
-          <p class="task-desc">{{ task.description }}</p>
-          <button class="task-btn task-btn--start" @click="updateTaskStatus(task.id, 'in_progress')">
-            ▶ 开始
+          <p class="text-sm text-gray-600 mb-3">{{ task.description }}</p>
+          <button 
+            @click="updateTaskStatus(task.id, 'in_progress')"
+            class="px-3 py-1.5 text-xs bg-[#007aff] text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
+          >
+            开始
           </button>
         </div>
       </div>
 
-      <!-- Completed -->
-      <div v-if="agentStore.completedTasks.length > 0" class="task-section">
-        <div class="section-label section-label--done">
-          <div class="section-dot" style="background: #10b981;" />
-          已完成
-        </div>
-        <div
-          v-for="task in agentStore.completedTasks.slice(0, 3)"
+      <!-- 已完成的任务 -->
+      <div v-if="agentStore.completedTasks.length > 0">
+        <h4 class="text-sm font-medium text-gray-500 mb-2 px-1">已完成</h4>
+        <div 
+          v-for="task in agentStore.completedTasks.slice(0, 5)" 
           :key="task.id"
-          class="task-card task-card--done"
+          class="p-4 bg-white/30 backdrop-blur-md rounded-xl border border-black/5 opacity-70 mb-3"
         >
-          <div class="task-top">
-            <div class="task-icon" style="opacity: 0.5;">{{ typeConfig[task.type]?.icon }}</div>
-            <span class="task-title task-title--done">{{ task.title }}</span>
-            <span :class="['task-badge', statusConfig[task.status].class]">
-              {{ statusConfig[task.status].label }}
+          <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center space-x-2">
+              <span class="text-[#34c759] flex items-center" v-html="typeIcons[task.type]"></span>
+              <span class="font-medium text-gray-500 line-through">{{ task.title }}</span>
+            </div>
+            <span :class="['px-2 py-1 text-xs rounded-full', statusColors[task.status]]">
+              {{ statusLabels[task.status] }}
             </span>
           </div>
         </div>
       </div>
 
-      <!-- Empty -->
-      <div v-if="!hasAnyTask" class="task-empty">
-        <div style="font-size: 28px; margin-bottom: 8px; opacity: 0.4;">📋</div>
-        <p style="font-size: 13px; color: #475569;">暂无学习任务</p>
-        <p style="font-size: 11px; color: #334155; margin-top: 4px;">AI 将根据学习情况自动生成</p>
+      <!-- 空状态 -->
+      <div v-if="Object.values(tasksByStatus).every(tasks => tasks.length === 0)" class="text-center py-10">
+        <div class="w-12 h-12 rounded-full bg-white/60 border border-black/5 shadow-sm flex items-center justify-center mx-auto mb-4 text-[#007aff]">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+        </div>
+        <p class="text-gray-600 font-medium">暂无学习任务</p>
+        <p class="text-sm text-gray-400 mt-1">
+          AI会根据你的学习情况生成任务
+        </p>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.task-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-/* Header */
-.panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
-  flex-shrink: 0;
-}
-
-.head-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.head-icon { font-size: 16px; }
-
-.head-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #e2e8f0;
-}
-
-.task-counts {
-  display: flex;
-  gap: 6px;
-}
-
-.count-badge {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 20px;
-}
-
-.count-progress {
-  color: #818cf8;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-}
-
-.count-pending {
-  color: #94a3b8;
-  background: rgba(71, 85, 105, 0.2);
-  border: 1px solid rgba(71, 85, 105, 0.3);
-}
-
-/* Task list */
-.task-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.task-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.section-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  padding: 0 2px;
-}
-
-.section-label--progress { color: #818cf8; }
-.section-label--pending  { color: #64748b; }
-.section-label--done     { color: #34d399; }
-
-.section-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-.pulse-dot {
-  background: #818cf8;
-  animation: pulse-ring 2s ease-in-out infinite;
-}
-
-/* Task card */
-.task-card {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  transition: border-color 0.2s ease;
-}
-
-.task-card--progress {
-  background: rgba(99, 102, 241, 0.08);
-  border-color: rgba(99, 102, 241, 0.25);
-}
-
-.task-card--pending {
-  background: rgba(10, 22, 40, 0.4);
-  border-color: rgba(71, 85, 105, 0.25);
-}
-
-.task-card--done {
-  background: rgba(16, 185, 129, 0.05);
-  border-color: rgba(16, 185, 129, 0.15);
-  opacity: 0.65;
-}
-
-.task-top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.task-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.task-title {
-  flex: 1;
-  font-size: 12px;
-  font-weight: 600;
-  color: #e2e8f0;
-  line-height: 1.3;
-}
-
-.task-title--done {
-  text-decoration: line-through;
-  color: #64748b;
-}
-
-.task-badge {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 20px;
-  border: 1px solid;
-  flex-shrink: 0;
-}
-
-.task-desc {
-  font-size: 11px;
-  color: #475569;
-  line-height: 1.4;
-}
-
-/* Buttons */
-.task-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.task-btn {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.task-btn--complete {
-  color: #34d399;
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.35);
-}
-
-.task-btn--complete:hover {
-  background: rgba(16, 185, 129, 0.2);
-}
-
-.task-btn--pause {
-  color: #94a3b8;
-  background: rgba(71, 85, 105, 0.15);
-  border-color: rgba(71, 85, 105, 0.3);
-}
-
-.task-btn--pause:hover {
-  background: rgba(71, 85, 105, 0.25);
-}
-
-.task-btn--start {
-  color: #818cf8;
-  background: rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.3);
-}
-
-.task-btn--start:hover {
-  background: rgba(99, 102, 241, 0.22);
-}
-
-/* Empty */
-.task-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 120px;
-  text-align: center;
-}
-</style>

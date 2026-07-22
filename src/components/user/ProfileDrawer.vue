@@ -126,19 +126,19 @@ const handleLogout = () => {
   height: 56px;
   border-radius: 50%;
   background-color: var(--bg-tertiary);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
 }
 
 .username {
   font-size: 18px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: rgba(255, 255, 255, 0.95);
   margin-bottom: 2px;
 }
 
 .level {
   font-size: 13px;
-  color: var(--blue-primary);
+  color: var(--status-learning);
   font-weight: 600;
 }
 
@@ -153,7 +153,7 @@ const handleLogout = () => {
 }
 
 .close-btn:hover {
-  background: var(--bg-tertiary);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
 }
 
@@ -192,7 +192,7 @@ const handleLogout = () => {
 
 .progress-bar-fill {
   height: 100%;
-  background-color: var(--blue-primary);
+  background-color: var(--status-learning);
   border-radius: 4px;
   transition: width 1s ease-out;
 }
@@ -206,8 +206,8 @@ const handleLogout = () => {
 
 /* Notifications */
 .badge {
-  background: var(--blue-light);
-  color: var(--blue-active);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
@@ -241,7 +241,7 @@ const handleLogout = () => {
   flex-shrink: 0;
 }
 
-.notif-info { background-color: var(--blue-primary); }
+.notif-info { background-color: var(--status-learning); }
 .notif-success { background-color: var(--success); }
 .notif-warning { background-color: var(--warning); }
 .notif-error { background-color: var(--danger); }
@@ -279,7 +279,7 @@ const handleLogout = () => {
   color: var(--danger);
 }
 .text-danger:hover {
-  background: rgba(196, 154, 154, 0.1);
+  background: rgba(248, 113, 113, 0.1);
 }
 
 /* Transitions */

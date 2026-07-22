@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import type { Node, Edge } from '@vue-flow/core'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
 import { useKnowledgeStore } from '@/stores/knowledge'
-import { useRoute, useRouter } from 'vue-router'
 import MapNode from './MapNode.vue'
 import MapEdge from './MapEdge.vue'
 import ContextMenu from './ContextMenu.vue'
 import { NODE_CATEGORIES } from '@/utils/constants'
+import { useAppStore } from '@/stores/app'
 
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
@@ -17,13 +18,12 @@ import '@vue-flow/controls/dist/style.css'
 import '@vue-flow/minimap/dist/style.css'
 
 const knowledgeStore = useKnowledgeStore()
-const route = useRoute()
-const router = useRouter()
 
 const { onNodeClick, onPaneClick, onNodeContextMenu, fitView } = useVueFlow()
+const appStore = useAppStore()
 
-const nodes = ref([])
-const edges = ref([])
+const nodes = ref<Node[]>([])
+const edges = ref<Edge[]>([])
 const contextMenu = ref<{ visible: boolean; x: number; y: number; nodeId: string | null }>({
   visible: false,
   x: 0,
@@ -112,8 +112,11 @@ const updateGraph = () => {
 
 // 处理节点点击
 onNodeClick(({ node }) => {
-  knowledgeStore.selectNode(knowledgeStore.getNodeById(node.id) || null)
-  router.push(`/map/${node.id}`)
+  const targetNode = knowledgeStore.getNodeById(node.id) || null
+  knowledgeStore.selectNode(targetNode)
+  if (targetNode) {
+    appStore.openPanel(targetNode.id)
+  }
 })
 
 // 处理空白区域点击
@@ -127,8 +130,8 @@ onNodeContextMenu(({ event, node }) => {
   event.preventDefault()
   contextMenu.value = {
     visible: true,
-    x: event.clientX,
-    y: event.clientY,
+    x: (event as MouseEvent).clientX,
+    y: (event as MouseEvent).clientY,
     nodeId: node.id
   }
 })
@@ -144,18 +147,16 @@ const handleContextMenuAction = (action: string, nodeId: string) => {
   
   switch (action) {
     case 'explain':
-      // AI解释
-      router.push(`/agent?nodeId=${nodeId}`)
+      appStore.openAgentWithAction('explain', nodeId)
       break
     case 'practice':
-      // 生成练习
-      router.push(`/agent?nodeId=${nodeId}&action=practice`)
+      appStore.openAgentWithAction('practice', nodeId)
       break
     case 'plan':
-      // 加入学习计划
+      appStore.openAgentWithAction('plan', nodeId)
       break
     case 'errors':
-      // 查看错误记录
+      // mock for now
       break
   }
 }
@@ -172,13 +173,13 @@ watch([searchQuery, selectedCategory, selectedMastery], () => {
   updateGraph()
 })
 
-// 监听路由参数变化
-watch(() => route.params.nodeId, (newNodeId) => {
+// 监听选中节点变化以更新视图
+watch(() => appStore.panelNodeId, (newNodeId) => {
   if (newNodeId) {
-    const node = knowledgeStore.getNodeById(newNodeId as string)
+    const node = knowledgeStore.getNodeById(newNodeId)
     if (node) {
       knowledgeStore.selectNode(node)
-      fitView({ nodes: [newNodeId as string], duration: 500 })
+      fitView({ nodes: [newNodeId], duration: 500 })
     }
   }
 })
@@ -187,7 +188,7 @@ onMounted(() => {
   initGraph()
   
   // 如果有初始节点，聚焦到该节点
-  const nodeId = route.params.nodeId as string
+  const nodeId = appStore.panelNodeId
   if (nodeId) {
     setTimeout(() => {
       fitView({ nodes: [nodeId], duration: 500 })

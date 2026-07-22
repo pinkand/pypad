@@ -37,3 +37,16 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Environment & Python
+.env
+.env.*
+!.env.example
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.pytest_cache/
+

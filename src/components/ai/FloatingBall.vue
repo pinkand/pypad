@@ -46,19 +46,18 @@ const unreadAgentMessages = 1
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 20px var(--blue-glass);
-  animation: pulse-glow 3s infinite;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02);
 }
 
 .icon {
-  color: var(--blue-active);
+  color: var(--text-primary);
   z-index: 2;
   transition: transform 0.3s;
 }
 
 .floating-ball:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(142, 174, 196, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .floating-ball:hover .icon {
@@ -66,7 +65,7 @@ const unreadAgentMessages = 1
 }
 
 .floating-ball.is-active {
-  box-shadow: 0 0 0 2px var(--blue-primary);
+  box-shadow: 0 0 0 2px var(--accent), 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: scale(0.9);
 }
 

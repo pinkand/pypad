@@ -9,6 +9,12 @@ export interface KnowledgeNode {
   mastery?: number
   lastStudyTime?: string
   position?: { x: number; y: number; z: number }
+  
+  // Tree structure fields
+  parentId?: string | null
+  depth?: number
+  sortOrder?: number
+  children?: KnowledgeNode[]
 }
 
 export interface KnowledgeEdge {
@@ -52,4 +58,29 @@ export interface WrongQuestion {
   errorReason: string
   resolved: boolean
   createdAt: string
+}
+
+export interface GraphResponse {
+  tree: KnowledgeNode[]
+  edges: KnowledgeEdge[]
+}
+
+export interface UserProfile {
+  id: string
+  name: string
+  email: string
+  currentGoal: string
+  level: number
+  experience: number
+  streak: number
+  createdAt: string
+}
+
+export interface UserStats {
+  totalNodes: number
+  masteredNodes: number
+  learningNodes: number
+  weakNodes: number
+  totalTimeSpent: number
+  averageMastery: number
 }

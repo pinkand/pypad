@@ -1,13 +1,24 @@
 export const MASTERY_COLORS = {
-  excellent: '#22c55e',  // 90-100 绿色
-  good: '#eab308',       // 60-90 黄色
-  weak: '#ef4444',       // <60 红色
+  excellent: 'var(--status-mastered)',
+  good: 'var(--status-learning)',
+  weak: 'var(--status-weak)',
+  unlearned: 'var(--status-unlearned)'
 } as const
 
 export const MASTERY_THRESHOLDS = {
   excellent: 90,
   good: 60,
+  weak: 1
 } as const
+
+export const KNOWLEDGE_DOMAINS = [
+  '基础语法',
+  '数据类型',
+  '控制流',
+  '函数',
+  '面向对象',
+  '高级特性'
+] as const
 
 export const NODE_CATEGORIES = [
   '基础语法',

@@ -42,11 +42,11 @@ const totalUnread = unreadMessages + unreadNotifications
 
 .user-chip:hover {
   transform: scale(1.05);
-  box-shadow: 0 12px 32px rgba(142, 174, 196, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .user-chip.is-active {
-  box-shadow: 0 0 0 2px var(--blue-primary);
+  box-shadow: 0 0 0 2px var(--accent), 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .avatar {
@@ -72,7 +72,7 @@ const totalUnread = unreadMessages + unreadNotifications
   align-items: center;
   justify-content: center;
   padding: 0 4px;
-  border: 2px solid var(--bg-primary);
+  border: 2px solid rgba(15, 10, 40, 0.8);
   box-sizing: content-box;
 }
 </style>

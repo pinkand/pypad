@@ -2,12 +2,14 @@
 import { ref, nextTick, watch, computed } from 'vue'
 import { useAgentStore } from '@/stores/agent'
 import { useKnowledgeStore } from '@/stores/knowledge'
+import { useAppStore } from '@/stores/app'
 import { AGENT_LABELS } from '@/utils/constants'
 import type { AgentType } from '@/types/agent'
 import { agentApi } from '@/services/api'
 
 const agentStore = useAgentStore()
 const knowledgeStore = useKnowledgeStore()
+const appStore = useAppStore()
 
 const inputMessage = ref('')
 const messagesContainerRef = ref<HTMLDivElement>()
@@ -24,15 +26,15 @@ const scrollToBottom = async () => {
 watch(() => agentStore.messages.length, scrollToBottom)
 
 // Agent configs with colors and icons
-const agentConfigs: Record<string, { icon: string; color: string; label: string }> = {
-  tutor:    { icon: '📚', color: '#6366f1', label: '知识导师' },
-  practice: { icon: '✏️', color: '#10b981', label: '练习生成' },
-  coder:    { icon: '💻', color: '#3b82f6', label: '代码分析' },
-  planner:  { icon: '📋', color: '#f59e0b', label: '学习规划' },
-  memory:   { icon: '🧠', color: '#8b5cf6', label: '记忆管理' }
+const agentConfigs: Record<AgentType, { icon: string; color: string; label: string }> = {
+  tutor:    { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>', color: '#6366f1', label: '知识导师' },
+  practice: { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>', color: '#10b981', label: '练习生成' },
+  coder:    { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>', color: '#3b82f6', label: '代码分析' },
+  planner:  { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>', color: '#f59e0b', label: '学习规划' },
+  memory:   { icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>', color: '#8b5cf6', label: '记忆管理' }
 }
 
-const currentAgent = computed(() => agentConfigs[agentStore.currentAgent] ?? agentConfigs.tutor)
+const currentAgent = computed(() => agentConfigs[agentStore.currentAgent] || agentConfigs.tutor)
 
 // Send message
 const sendMessage = async () => {
@@ -48,7 +50,7 @@ const sendMessage = async () => {
       message,
       agentType: agentStore.currentAgent,
       knowledgeId: knowledgeStore.selectedNode?.id
-    })
+    }) as unknown as { message: string }
     agentStore.addMessage('assistant', response.message)
   } catch (error) {
     const response = generateLocalResponse(message)
@@ -87,10 +89,10 @@ const generateLocalResponse = (userMessage: string): string => {
 
 // Quick actions
 const quickActions = [
-  { label: '💡 解释知识点', action: 'explain' },
-  { label: '✏️ 生成练习', action: 'practice' },
-  { label: '🔍 分析代码', action: 'analyze' },
-  { label: '📅 制定计划', action: 'plan' }
+  { label: '解释知识点', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>', action: 'explain' },
+  { label: '生成练习', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>', action: 'practice' },
+  { label: '分析代码', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>', action: 'analyze' },
+  { label: '制定计划', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>', action: 'plan' }
 ]
 
 const handleQuickAction = (action: string) => {
@@ -112,6 +114,24 @@ const handleQuickAction = (action: string) => {
   sendMessage()
 }
 
+watch(() => appStore.agentActionTrigger, (trigger) => {
+  if (trigger) {
+    if (trigger.action === 'explain') agentStore.setAgent('tutor')
+    if (trigger.action === 'practice') agentStore.setAgent('practice')
+    if (trigger.action === 'analyze') agentStore.setAgent('coder')
+    if (trigger.action === 'plan') agentStore.setAgent('planner')
+    
+    const node = knowledgeStore.getNodeById(trigger.nodeId)
+    if (node) {
+      knowledgeStore.selectNode(node)
+      // Small delay to ensure agent UI transitions before sending message
+      setTimeout(() => {
+        handleQuickAction(trigger.action)
+      }, 300)
+    }
+  }
+}, { deep: true })
+
 const clearChat = () => agentStore.clearMessages()
 
 // Handle enter key (shift+enter = newline)
@@ -130,9 +150,9 @@ const handleKeydown = (e: KeyboardEvent) => {
       <div class="agent-info">
         <div
           class="agent-avatar"
-          :style="{ background: `linear-gradient(135deg, ${currentAgent.color}33, ${currentAgent.color}11)`, borderColor: `${currentAgent.color}44` }"
+          :style="{ background: `linear-gradient(135deg, ${currentAgent.color}33, ${currentAgent.color}11)`, borderColor: `${currentAgent.color}44`, color: currentAgent.color }"
+          v-html="currentAgent.icon"
         >
-          {{ currentAgent.icon }}
         </div>
         <div class="agent-meta">
           <span class="agent-name">{{ currentAgent.label }}</span>
@@ -154,8 +174,8 @@ const handleKeydown = (e: KeyboardEvent) => {
             :style="agentStore.currentAgent === key ? { color: config.color, borderColor: config.color + '60' } : {}"
             @click="agentStore.setAgent(key as AgentType)"
             :title="config.label"
+            v-html="config.icon"
           >
-            {{ config.icon }}
           </button>
         </div>
 
@@ -172,8 +192,8 @@ const handleKeydown = (e: KeyboardEvent) => {
     <div ref="messagesContainerRef" class="messages-area">
       <!-- Empty state -->
       <div v-if="agentStore.messages.length === 0" class="empty-chat">
-        <div class="empty-orb" :style="{ background: `radial-gradient(circle, ${currentAgent.color}30, transparent)` }">
-          <span class="empty-icon">{{ currentAgent.icon }}</span>
+        <div class="empty-orb" :style="{ background: `radial-gradient(circle, ${currentAgent.color}30, transparent)`, color: currentAgent.color }">
+          <span class="empty-icon" v-html="currentAgent.icon"></span>
         </div>
         <h3 class="empty-title">{{ currentAgent.label }}</h3>
         <p class="empty-desc">开始与 AI 助手对话，探索 Python 知识宇宙</p>
@@ -184,7 +204,8 @@ const handleKeydown = (e: KeyboardEvent) => {
             class="quick-chip"
             @click="handleQuickAction(action.action)"
           >
-            {{ action.label }}
+            <span class="chip-icon" v-html="action.icon"></span>
+            <span>{{ action.label }}</span>
           </button>
         </div>
       </div>
@@ -198,8 +219,8 @@ const handleKeydown = (e: KeyboardEvent) => {
           :class="message.role === 'user' ? 'message-row--user' : 'message-row--ai'"
         >
           <!-- AI avatar -->
-          <div v-if="message.role !== 'user'" class="msg-avatar">
-            <span>{{ currentAgent.icon }}</span>
+          <div v-if="message.role !== 'user'" class="msg-avatar" :style="{ color: currentAgent.color }">
+            <span class="msg-avatar-icon" v-html="currentAgent.icon"></span>
           </div>
 
           <!-- Bubble -->
@@ -213,8 +234,8 @@ const handleKeydown = (e: KeyboardEvent) => {
 
         <!-- Typing indicator -->
         <div v-if="isThinking" key="thinking" class="message-row message-row--ai">
-          <div class="msg-avatar">
-            <span>{{ currentAgent.icon }}</span>
+          <div class="msg-avatar" :style="{ color: currentAgent.color }">
+            <span class="msg-avatar-icon" v-html="currentAgent.icon"></span>
           </div>
           <div class="bubble bubble--ai typing-bubble">
             <div class="typing-dots">
@@ -237,7 +258,8 @@ const handleKeydown = (e: KeyboardEvent) => {
           class="quick-chip"
           @click="handleQuickAction(action.action)"
         >
-          {{ action.label }}
+          <span class="chip-icon" v-html="action.icon"></span>
+          <span>{{ action.label }}</span>
         </button>
       </div>
 
@@ -256,7 +278,7 @@ const handleKeydown = (e: KeyboardEvent) => {
           class="send-btn"
           @click="sendMessage"
           :disabled="!inputMessage.trim() || isThinking"
-          :style="inputMessage.trim() ? { boxShadow: '0 4px 16px rgba(99,102,241,0.4)' } : {}"
+          :style="inputMessage.trim() ? { boxShadow: '0 4px 16px rgba(0, 122, 255, 0.4)' } : {}"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
@@ -281,9 +303,10 @@ const handleKeydown = (e: KeyboardEvent) => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  background: rgba(8, 16, 32, 0.6);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
 }
 
 .agent-info {
@@ -311,7 +334,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 .agent-name {
   font-size: 13px;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .agent-status {
@@ -319,7 +342,7 @@ const handleKeydown = (e: KeyboardEvent) => {
   align-items: center;
   gap: 5px;
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .status-dot {
@@ -339,8 +362,8 @@ const handleKeydown = (e: KeyboardEvent) => {
 .agent-tabs {
   display: flex;
   gap: 4px;
-  background: rgba(10, 22, 40, 0.6);
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 3px;
 }
@@ -357,7 +380,7 @@ const handleKeydown = (e: KeyboardEvent) => {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .agent-tab:hover {
@@ -375,9 +398,9 @@ const handleKeydown = (e: KeyboardEvent) => {
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid var(--border);
   background: transparent;
-  color: #64748b;
+  color: var(--text-secondary);
   border-radius: 7px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -433,12 +456,12 @@ const handleKeydown = (e: KeyboardEvent) => {
 .empty-title {
   font-size: 18px;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .empty-desc {
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-secondary);
   max-width: 280px;
   line-height: 1.5;
 }
@@ -456,19 +479,35 @@ const handleKeydown = (e: KeyboardEvent) => {
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 500;
-  color: #94a3b8;
-  background: rgba(10, 22, 40, 0.6);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--border);
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+:deep(.chip-icon) {
+  display: flex;
+  align-items: center;
+}
+
+:deep(.chip-icon svg) {
+  width: 14px;
+  height: 14px;
 }
 
 .quick-chip:hover {
-  color: #f1f5f9;
-  border-color: rgba(99, 102, 241, 0.5);
-  background: rgba(99, 102, 241, 0.12);
+  color: var(--text-primary);
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(255, 255, 255, 0.9);
   transform: translateY(-1px);
 }
 
@@ -492,13 +531,19 @@ const handleKeydown = (e: KeyboardEvent) => {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
   flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+}
+
+:deep(.msg-avatar-icon svg) {
+  width: 16px;
+  height: 16px;
 }
 
 /* Bubbles */
@@ -509,18 +554,23 @@ const handleKeydown = (e: KeyboardEvent) => {
 }
 
 .bubble--user {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: rgba(0, 122, 255, 0.85); /* Apple Blue Glass */
   border-radius: 16px 16px 4px 16px;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
   color: white;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .bubble--ai {
-  background: rgba(15, 31, 56, 0.8);
-  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--border);
   border-radius: 16px 16px 16px 4px;
-  backdrop-filter: blur(8px);
-  color: #e2e8f0;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-glass);
 }
 
 .bubble-content {
@@ -551,7 +601,7 @@ const handleKeydown = (e: KeyboardEvent) => {
   padding: 12px 16px;
   border-top: 1px solid rgba(99, 102, 241, 0.12);
   flex-shrink: 0;
-  background: rgba(5, 10, 24, 0.7);
+  background: rgba(255, 255, 255, 0.7);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -571,15 +621,19 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 .input-wrapper {
   flex: 1;
-  background: rgba(10, 22, 40, 0.7);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--border);
   border-radius: 12px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .input-wrapper--focus {
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+  border-color: rgba(0, 122, 255, 0.4);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .chat-input {
@@ -587,7 +641,7 @@ const handleKeydown = (e: KeyboardEvent) => {
   background: transparent;
   border: none;
   outline: none;
-  color: #f1f5f9;
+  color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
   resize: none;
@@ -598,7 +652,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 }
 
 .chat-input::placeholder {
-  color: #334155;
+  color: var(--text-tertiary);
 }
 
 .send-btn {
@@ -606,7 +660,7 @@ const handleKeydown = (e: KeyboardEvent) => {
   height: 40px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--info);
   color: white;
   cursor: pointer;
   display: flex;

@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import PerformanceMonitor from './components/common/PerformanceMonitor.vue'
 </script>
 
 <template>
   <RouterView />
+  <PerformanceMonitor />
 </template>
-
-<style>
-/* Any global styles that couldn't go in main.css */
-</style>

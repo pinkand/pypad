@@ -13,9 +13,15 @@ const activeNode = computed(() => {
 })
 
 const handleAiExplain = () => {
-  appStore.toggleAgent()
-  // Here we would typically dispatch a message to the agent store
-  console.log('Requesting AI explanation for:', activeNode.value?.name)
+  if (activeNode.value) {
+    appStore.openAgentWithAction('explain', activeNode.value.id)
+  }
+}
+
+const handlePractice = () => {
+  if (activeNode.value) {
+    appStore.openAgentWithAction('practice', activeNode.value.id)
+  }
 }
 </script>
 
@@ -50,7 +56,7 @@ const handleAiExplain = () => {
           </svg>
           AI Explain
         </button>
-        <button class="btn btn-secondary">
+        <button class="btn btn-secondary" @click="handlePractice">
           Generate Practice
         </button>
       </div>
@@ -72,7 +78,7 @@ const handleAiExplain = () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+  box-shadow: -10px 0 40px rgba(0,0,0,0.05);
 }
 
 .panel-header {
@@ -81,7 +87,9 @@ const handleAiExplain = () => {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border);
-  background: rgba(245, 243, 240, 0.4);
+  background: rgba(255, 255, 255, 0.8);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
 }
 
 .node-title {
@@ -137,7 +145,7 @@ const handleAiExplain = () => {
 .panel-footer {
   padding: 24px 32px;
   border-top: 1px solid var(--border);
-  background: rgba(245, 243, 240, 0.6);
+  background: rgba(255, 255, 255, 0.9);
   display: flex;
   gap: 16px;
 }
@@ -158,13 +166,13 @@ const handleAiExplain = () => {
 }
 
 .btn-primary {
-  background-color: var(--blue-primary);
+  background-color: var(--accent);
   color: #fff;
   box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background-color: var(--blue-hover);
+  background-color: var(--accent-hover);
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
