@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { WorkspaceRun, CodeReview } from '@/types/knowledge'
+import type { WorkspaceRun, CodeReview, VariablesMap, StyleReview } from '@/types/knowledge'
 import { workspaceApi } from '@/services/api'
 import { useSessionStore } from './session'
 
@@ -12,7 +12,9 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const runtimeMs = ref<number>(0)
   const memoryBytes = ref<number>(0)
   const isExecuting = ref<boolean>(false)
-  
+  const variables = ref<VariablesMap | null>(null)
+  const styleReview = ref<StyleReview | null>(null)
+
   const runHistory = ref<WorkspaceRun[]>([])
   const latestReview = ref<CodeReview | null>(null)
 
@@ -22,7 +24,8 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     isExecuting.value = true
     stdout.value = ''
     stderr.value = ''
-    
+    variables.value = null
+
     const sessionId = sessionStore.currentSession?.id || 'default-session'
 
     try {
@@ -38,6 +41,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       exitCode.value = res.exitCode ?? 0
       runtimeMs.value = res.runtimeMs ?? 42
       memoryBytes.value = res.memoryBytes ?? 1024 * 512
+      variables.value = res.variables || null
 
       const runRecord: WorkspaceRun = {
         id: res.id || `run-${Date.now()}`,
@@ -77,6 +81,17 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     }
   }
 
+  const requestStyleReview = async (runId: string) => {
+    try {
+      const res: any = await workspaceApi.requestStyleReview(runId)
+      styleReview.value = res.styleReview || res
+      return styleReview.value
+    } catch (err) {
+      console.error('Style Review Error:', err)
+      return null
+    }
+  }
+
   return {
     currentCode,
     stdout,
@@ -85,9 +100,12 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     runtimeMs,
     memoryBytes,
     isExecuting,
+    variables,
+    styleReview,
     runHistory,
     latestReview,
     runCode,
-    requestAIReview
+    requestAIReview,
+    requestStyleReview
   }
 })

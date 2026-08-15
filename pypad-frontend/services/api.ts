@@ -133,6 +133,8 @@ export const workspaceApi = {
     apiClient.get(`/api/workspace/runs/${sessionId}`),
   requestAIReview: (runId: string) =>
     apiClient.post('/api/workspace/ai-review', { runId }),
+  requestStyleReview: (runId: string) =>
+    apiClient.post('/api/workspace/style-review', { runId }),
 }
 
 // 代码审查API

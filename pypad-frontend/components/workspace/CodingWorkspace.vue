@@ -7,6 +7,8 @@ import { usePracticeStore } from '@/stores/practice'
 import { useSessionStore } from '@/stores/session'
 import { agentApi, workspaceApi, practiceApi } from '@/services/api'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
+import VariableInspector from '@/components/workspace/VariableInspector.vue'
+import StyleReviewCard from '@/components/workspace/StyleReviewCard.vue'
 
 const appStore = useAppStore()
 const workspaceStore = useWorkspaceStore()
@@ -19,6 +21,8 @@ const code = ref(`# 在这里编写Python代码\ndef hello():\n    print("Welcom
 const output = ref('')
 const isRunning = ref(false)
 const aiEvaluation = ref<{ type: 'success' | 'warning' | 'error' | 'info', message: string } | null>(null)
+const outputTab = ref<'console' | 'variables' | 'style'>('console')
+const styleReviewLoading = ref(false)
 
 // 当前选中的知识点（用于 teach/practice 模式获取后端数据）
 const activeNode = computed(() => {
@@ -134,6 +138,10 @@ const runCode = async () => {
 
       if (run.exitCode === 0) {
         aiEvaluation.value = { type: 'success', message: '代码运行成功，通过全量逻辑校验！' }
+        // Auto-switch to variables tab if variables were captured
+        if (workspaceStore.variables && Object.keys(workspaceStore.variables).length > 0) {
+          outputTab.value = 'variables'
+        }
       } else {
         const errorDetail = run.errorDetail
         if (errorDetail?.lineNumber && editorRef.value && monacoRef.value) {
@@ -162,17 +170,23 @@ const runCode = async () => {
   }
 }
 
-// AI Review — 调用后端 /api/workspace/ai-review
+// AI Review — 调用后端 /api/workspace/ai-review + style-review
 const aiReview = async () => {
   isRunning.value = true
+  styleReviewLoading.value = true
   aiEvaluation.value = null
+  outputTab.value = 'style'
 
   // 先运行代码获取 runId
   workspaceStore.currentCode = code.value
   try {
     const run: any = await workspaceStore.runCode()
     if (run?.id) {
-      const review: any = await workspaceApi.requestAIReview(run.id)
+      // Fire both requests in parallel
+      const [review, styleResult] = await Promise.all([
+        workspaceApi.requestAIReview(run.id),
+        workspaceStore.requestStyleReview(run.id)
+      ])
       const reviewData = review?.review || review
       if (reviewData) {
         aiEvaluation.value = {
@@ -185,6 +199,7 @@ const aiReview = async () => {
     aiEvaluation.value = { type: 'error', message: 'AI 代码审查失败，请检查后端服务。' }
   } finally {
     isRunning.value = false
+    styleReviewLoading.value = false
   }
 }
 
@@ -244,6 +259,15 @@ const submitCode = async () => {
     aiEvaluation.value = { type: 'error', message: '练习提交失败，请检查后端服务。' }
   } finally {
     isRunning.value = false
+  }
+}
+
+// Go to line in editor (used by style review)
+const gotoLine = (line: number) => {
+  if (editorRef.value && monacoRef.value) {
+    editorRef.value.revealLineInCenter(line)
+    editorRef.value.setPosition({ lineNumber: line, column: 1 })
+    editorRef.value.focus()
   }
 }
 
@@ -477,35 +501,89 @@ const hintCode = async () => {
 
             <!-- Output Area -->
             <div class="output-container glass-panel">
-              <div class="panel-header-small">
-                <h3>Console</h3>
-              </div>
-              <div class="output-content">
-                <!-- Standard Output -->
-                <div class="terminal-output" v-if="output">
-                  <pre>{{ output }}</pre>
+              <div class="output-tabs-header">
+                <div class="output-tabs">
+                  <button
+                    class="output-tab"
+                    :class="{ active: outputTab === 'console' }"
+                    @click="outputTab = 'console'"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="4 17 10 11 4 5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <line x1="12" y1="19" x2="20" y2="19" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Console
+                  </button>
+                  <button
+                    class="output-tab"
+                    :class="{ active: outputTab === 'variables' }"
+                    @click="outputTab = 'variables'"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    变量
+                    <span v-if="workspaceStore.variables" class="tab-badge">
+                      {{ Object.keys(workspaceStore.variables).length }}
+                    </span>
+                  </button>
+                  <button
+                    class="output-tab"
+                    :class="{ active: outputTab === 'style' }"
+                    @click="outputTab = 'style'"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    风格
+                    <span v-if="workspaceStore.styleReview" class="tab-badge" :class="workspaceStore.styleReview.category">
+                      {{ workspaceStore.styleReview.score }}
+                    </span>
+                  </button>
                 </div>
-                
-                <!-- AI Evaluation -->
-                <Transition name="fade">
-                  <div v-if="aiEvaluation" class="ai-evaluation" :class="aiEvaluation.type">
-                    <div class="eval-header">
-                      <svg v-if="aiEvaluation.type === 'success'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M22 4L12 14.01l-3-3" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      <svg v-else-if="aiEvaluation.type === 'warning'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M12 16v-4m0-4h.01" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      <span>AI Insights</span>
-                    </div>
-                    <p class="eval-message">{{ aiEvaluation.message }}</p>
+              </div>
+
+              <div class="output-content">
+                <!-- Console Tab -->
+                <template v-if="outputTab === 'console'">
+                  <div class="terminal-output" v-if="output">
+                    <pre>{{ output }}</pre>
                   </div>
-                </Transition>
+
+                  <Transition name="fade">
+                    <div v-if="aiEvaluation" class="ai-evaluation" :class="aiEvaluation.type">
+                      <div class="eval-header">
+                        <svg v-if="aiEvaluation.type === 'success'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M22 4L12 14.01l-3-3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <svg v-else-if="aiEvaluation.type === 'warning'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M12 16v-4m0-4h.01" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>AI Insights</span>
+                      </div>
+                      <p class="eval-message">{{ aiEvaluation.message }}</p>
+                    </div>
+                  </Transition>
+                </template>
+
+                <!-- Variables Tab -->
+                <template v-if="outputTab === 'variables'">
+                  <VariableInspector :variables="workspaceStore.variables" />
+                </template>
+
+                <!-- Style Review Tab -->
+                <template v-if="outputTab === 'style'">
+                  <StyleReviewCard
+                    :review="workspaceStore.styleReview"
+                    :loading="styleReviewLoading"
+                    @goto-line="gotoLine"
+                  />
+                </template>
               </div>
             </div>
 
@@ -943,14 +1021,78 @@ const hintCode = async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
+.output-tabs-header {
+  padding: 8px 16px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.output-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.output-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px 8px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.output-tab:hover {
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.output-tab.active {
+  color: var(--text-primary);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.output-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent, #6366f1);
+  border-radius: 2px 2px 0 0;
+}
+
+.tab-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 99px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #6366f1;
+}
+
+.tab-badge.excellent { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.tab-badge.good { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.tab-badge.fair { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.tab-badge.needs_improvement { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
 .output-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 16px;
+  overflow-y: auto;
 }
 
 .terminal-output {

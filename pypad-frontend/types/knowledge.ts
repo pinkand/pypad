@@ -124,20 +124,48 @@ export interface Practice {
   aiGenParams?: Record<string, unknown>
 }
 
+export interface VariableInfo {
+  type: string
+  value: any
+  size: number
+  length?: number
+}
+
+export interface VariablesMap {
+  [name: string]: VariableInfo
+}
+
 export interface WorkspaceRun {
   id: string
   sessionId: string
   practiceId?: string
   code: string
   language: string
-  status: 'success' | 'compile_error' | 'runtime_error' | 'timeout'
+  status: 'success' | 'compile_error' | 'runtime_error' | 'timeout' | 'security_violation'
   stdout: string
   stderr: string
   exitCode: number
   runtimeMs: number
   memoryBytes: number
+  variables?: VariablesMap
   aiReview?: CodeReview
   createdAt: string
+}
+
+export interface StyleIssue {
+  line: number
+  type: 'warning' | 'suggestion'
+  severity: 'high' | 'medium' | 'low' | 'info'
+  rule: string
+  message: string
+  example: string
+}
+
+export interface StyleReview {
+  score: number
+  issues: StyleIssue[]
+  suggestions: string[]
+  category: 'excellent' | 'good' | 'fair' | 'needs_improvement' | 'error'
 }
 
 export interface CodeReview {

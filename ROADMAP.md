@@ -61,7 +61,9 @@
 - [ ] Dashboard 掌握度雷达图
 
 ## Gate 8 🔴 — 测试与交付
-- [x] 后端测试 85 项全通过
+- [x] 后端测试 112 项全通过（含 27 项新功能测试）
 - [x] 前端 7 个页面补全
+- [x] Code Quality & Pythonic Style Review（AST 静态分析 + LLM 增强）
+- [x] Variable Memory Visualization（沙箱变量捕获 + 树形展开 UI）
 - [ ] 前端组件测试
 - [ ] 参赛演示视频与文档

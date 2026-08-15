@@ -14,6 +14,7 @@ export const useAppStore = defineStore('app', () => {
   
   const panelOpen = ref(false)
   const profileOpen = ref(false)
+  const settingsOpen = ref(false)
   const agentOpen = ref(false)
   const panelNodeId = ref<string | null>(null)
   const agentActionTrigger = ref<{ action: string, nodeId: string, timestamp: number } | null>(null)
@@ -53,6 +54,10 @@ export const useAppStore = defineStore('app', () => {
 
   const toggleProfile = () => {
     profileOpen.value = !profileOpen.value
+  }
+
+  const toggleSettings = () => {
+    settingsOpen.value = !settingsOpen.value
   }
 
   const toggleAgent = () => {
@@ -103,6 +108,8 @@ export const useAppStore = defineStore('app', () => {
     closePanel,
     profileOpen,
     toggleProfile,
+    settingsOpen,
+    toggleSettings,
     agentOpen,
     toggleAgent,
     panelNodeId,

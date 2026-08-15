@@ -629,20 +629,21 @@ class RunCodeReq(BaseModel):
 class AIReviewReq(BaseModel):
     runId: str
 
-from sandbox_runner import execute_sandboxed
+from sandbox_runner import execute_sandboxed, analyze_pythonic_style
 
 @app.post("/api/workspace/run")
 def run_code(req: RunCodeReq, session: Session = Depends(get_session)):
     run_id = f"run-{int(datetime.utcnow().timestamp())}"
 
     if req.language == "python":
-        res = execute_sandboxed(req.code, timeout_sec=5.0)
+        res = execute_sandboxed(req.code, timeout_sec=5.0, capture_variables=True)
         status = res["status"]
         stdout_buf = res["stdout"]
         stderr_buf = res["stderr"]
         exit_code = res["exitCode"]
         runtime_ms = res["runtimeMs"]
         error_detail = res.get("errorDetail")
+        variables = res.get("variables")
     else:
         status = "runtime_error"
         stdout_buf = ""
@@ -650,6 +651,7 @@ def run_code(req: RunCodeReq, session: Session = Depends(get_session)):
         exit_code = -1
         runtime_ms = 0
         error_detail = None
+        variables = None
 
     run = WorkspaceRun(
         id=run_id, session_id=req.sessionId, practice_id=req.practiceId,
@@ -667,6 +669,8 @@ def run_code(req: RunCodeReq, session: Session = Depends(get_session)):
     run_res = _run_dict(run)
     if error_detail:
         run_res["errorDetail"] = error_detail
+    if variables:
+        run_res["variables"] = variables
     return run_res
 
 
@@ -683,12 +687,22 @@ def request_ai_review(req: AIReviewReq, session: Session = Depends(get_session))
     if not run:
         raise HTTPException(404, "Run not found")
 
+    # Step 1: Run static Pythonic style analysis (no LLM needed)
+    style_result = analyze_pythonic_style(run.code)
+
     prompt = f"""审查以下 Python 代码，给出评分和建议。严格按 JSON 返回（不要有其他文字）：
 代码:
 ```
 {run.code}
 ```
 执行结果: exit_code={run.exit_code}, stdout={run.stdout[:200] if run.stdout else ''}, stderr={run.stderr[:200] if run.stderr else ''}
+
+静态风格分析结果:
+- 风格得分: {style_result['score']}/100
+- 风格类别: {style_result['category']}
+- 发现的问题: {[i['message'] for i in style_result['issues'][:5]]}
+
+请综合考虑代码正确性、逻辑质量、性能和 Python 风格规范。
 
 返回格式:
 {{"overallScore": 0-100, "codeQualityScore": 0-100, "logicScore": 0-100, "performanceScore": 0-100, "feedback": "总体评价（中文）", "suggestions": ["建议1", "建议2"], "weaknessTags": ["薄弱点1"]}}"""
@@ -712,16 +726,29 @@ def request_ai_review(req: AIReviewReq, session: Session = Depends(get_session))
         review = CodeReview(
             id=f"rev-{int(datetime.utcnow().timestamp())}",
             workspace_run_id=req.runId, session_id=run.session_id,
-            overall_score=80, code_quality_score=80, logic_score=80, performance_score=80,
-            ai_feedback="代码审查完成（LLM 解析失败，使用默认评分）",
-            suggestions=["建议添加类型注解", "增加异常处理"],
-            weakness_tags=["代码规范"],
+            overall_score=style_result['score'],
+            code_quality_score=style_result['score'],
+            logic_score=80, performance_score=80,
+            ai_feedback=f"代码风格分析完成（LLM 不可用）\n风格评分: {style_result['score']}/100",
+            suggestions=style_result['suggestions'],
+            weakness_tags=[i['rule'] for i in style_result['issues'][:3]],
         )
 
     session.add(review)
     session.commit()
     session.refresh(review)
     return {"review": _review_dict(review)}
+
+
+@app.post("/api/workspace/style-review")
+def style_review_only(req: AIReviewReq, session: Session = Depends(get_session)):
+    """Lightweight endpoint: returns Pythonic style analysis without LLM call."""
+    run = session.get(WorkspaceRun, req.runId)
+    if not run:
+        raise HTTPException(404, "Run not found")
+
+    style_result = analyze_pythonic_style(run.code)
+    return {"styleReview": style_result}
 
 
 # ──────────────────────────────────────────────

@@ -5,11 +5,12 @@ import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
+import type { MiniMapNodeFunc } from '@vue-flow/minimap'
 import { useKnowledgeStore } from '@/stores/knowledge'
 import MapNode from './MapNode.vue'
 import MapEdge from './MapEdge.vue'
 import ContextMenu from './ContextMenu.vue'
-import { NODE_CATEGORIES } from '@/utils/constants'
+import { NODE_CATEGORIES, MASTERY_THRESHOLDS } from '@/utils/constants'
 import { useAppStore } from '@/stores/app'
 
 import '@vue-flow/core/dist/style.css'
@@ -30,6 +31,15 @@ const contextMenu = ref<{ visible: boolean; x: number; y: number; nodeId: string
   y: 0,
   nodeId: null
 })
+
+// MiniMap 节点颜色：根据掌握度着色
+const miniMapNodeColor: MiniMapNodeFunc = (node) => {
+  const mastery = node.data?.mastery ?? 0
+  if (mastery >= MASTERY_THRESHOLDS.excellent) return '#34c759'
+  if (mastery >= MASTERY_THRESHOLDS.good) return '#007aff'
+  if (mastery >= MASTERY_THRESHOLDS.weak) return '#ff9500'
+  return '#e5e5ea'
+}
 
 // 搜索和筛选
 const searchQuery = ref('')
@@ -260,8 +270,37 @@ onMounted(() => {
       <Controls />
 
       <!-- 小地图 -->
-      <MiniMap />
+      <MiniMap
+        :node-color="miniMapNodeColor"
+        :node-stroke-width="2"
+        :width="180"
+        :height="140"
+        :mask-color="'rgba(0, 0, 0, 0.06)'"
+        :pannable="true"
+        :zoomable="true"
+        class="custom-minimap"
+      />
     </VueFlow>
+
+    <!-- 底部图例 -->
+    <div class="minimap-legend">
+      <div class="legend-item">
+        <span class="legend-dot" style="background: #34c759"></span>
+        已掌握
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot" style="background: #007aff"></span>
+        学习中
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot" style="background: #ff9500"></span>
+        薄弱
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot" style="background: #e5e5ea"></span>
+        未学习
+      </div>
+    </div>
 
     <!-- 右键菜单 -->
     <ContextMenu
@@ -369,7 +408,7 @@ onMounted(() => {
 .map-stats {
   position: absolute;
   top: 16px;
-  right: 16px;
+  right: 150px;
   z-index: 10;
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid var(--border);
@@ -383,5 +422,62 @@ onMounted(() => {
   font-size: 12px;
   color: var(--text-secondary);
   font-weight: 500;
+}
+
+/* MiniMap 玻璃态优化 */
+:deep(.vue-flow__minimap) {
+  background: rgba(255, 255, 255, 0.78) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  overflow: hidden;
+}
+
+:deep(.vue-flow__minimap-mask) {
+  fill: rgba(0, 0, 0, 0.05);
+  rx: 8;
+  ry: 8;
+}
+
+:deep(.vue-flow__minimap-node) {
+  stroke-width: 1.5;
+  rx: 3;
+  ry: 3;
+}
+
+/* 底部图例 */
+.minimap-legend {
+  position: absolute;
+  bottom: 20px;
+  right: 210px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 </style>

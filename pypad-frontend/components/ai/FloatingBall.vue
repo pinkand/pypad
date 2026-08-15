@@ -27,6 +27,7 @@ const navTags = computed(() => {
       showNavTags.value = false
     }},
     { id: 'dashboard', label: '学习统计', icon: '📊', action: () => { router.push('/dashboard'); showNavTags.value = false } },
+    { id: 'settings', label: '设置', icon: '⚙️', action: () => { appStore.toggleSettings(); showNavTags.value = false } },
   ]
 })
 
