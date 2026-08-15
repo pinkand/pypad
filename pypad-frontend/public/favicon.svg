@@ -1,23 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
+    <!-- Background Gradient (Obsidian to Midnight Indigo) -->
     <linearGradient id="pypadBg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0F172A"/>
       <stop offset="50%" stop-color="#1E1B4B"/>
       <stop offset="100%" stop-color="#090D16"/>
     </linearGradient>
 
+    <!-- Python Blue / AI Cyan Gradient -->
     <linearGradient id="pythonBlue" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#38BDF8"/>
       <stop offset="60%" stop-color="#3B82F6"/>
       <stop offset="100%" stop-color="#6366F1"/>
     </linearGradient>
 
+    <!-- Python Gold Accent Gradient -->
     <linearGradient id="pythonGold" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#FDE047"/>
       <stop offset="50%" stop-color="#F59E0B"/>
       <stop offset="100%" stop-color="#D97706"/>
     </linearGradient>
 
+    <!-- Node Glow Filters -->
     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
       <feGaussianBlur stdDeviation="8" result="blur"/>
       <feComposite in="SourceGraphic" in2="blur" operator="over"/>
@@ -44,16 +48,46 @@
   </g>
 
   <!-- Stylized Python 'P' Structure -->
-  <path d="M 160 136 H 260 C 320 136, 356 168, 356 216 C 356 264, 320 296, 260 296 H 216 V 216 H 260 C 275 216, 288 206, 288 192 C 288 178, 275 168, 260 168 H 160 Z" fill="url(#pythonBlue)" filter="url(#glow)"/>
-  <path d="M 352 376 H 252 C 192 376, 156 344, 156 296 C 156 248, 192 216, 252 216 H 296 V 296 H 252 C 237 296, 224 306, 224 320 C 224 334, 237 344, 252 344 H 352 Z" fill="url(#pythonGold)" filter="url(#glow)"/>
+  <!-- Upper Blue Loop (Python Top Head) -->
+  <path d="M 160 136 
+           H 260 
+           C 320 136, 356 168, 356 216 
+           C 356 264, 320 296, 260 296 
+           H 216 
+           V 216 
+           H 260 
+           C 275 216, 288 206, 288 192 
+           C 288 178, 275 168, 260 168 
+           H 160 
+           Z" 
+        fill="url(#pythonBlue)" 
+        filter="url(#glow)"/>
 
+  <!-- Lower Gold Loop (Python Tail / Learning Pad base) -->
+  <path d="M 352 376 
+           H 252 
+           C 192 376, 156 344, 156 296 
+           C 156 248, 192 216, 252 216 
+           H 296 
+           V 296 
+           H 252 
+           C 237 296, 224 306, 224 320 
+           C 224 334, 237 344, 252 344 
+           H 352 
+           Z" 
+        fill="url(#pythonGold)" 
+        filter="url(#glow)"/>
+
+  <!-- Python Serpent Eye Dots -->
   <circle cx="216" cy="168" r="10" fill="#FFFFFF"/>
   <circle cx="296" cy="344" r="10" fill="#0F172A"/>
 
+  <!-- Knowledge Graph Nodes & Synapse Links -->
   <line x1="170" y1="344" x2="256" y2="256" stroke="rgba(255, 255, 255, 0.7)" stroke-width="4" stroke-linecap="round"/>
   <line x1="256" y1="256" x2="342" y2="168" stroke="rgba(255, 255, 255, 0.7)" stroke-width="4" stroke-linecap="round"/>
   <line x1="216" y1="168" x2="296" y2="344" stroke="rgba(255, 255, 255, 0.35)" stroke-width="3" stroke-dasharray="6 6"/>
 
+  <!-- Synapse Graph Nodes -->
   <circle cx="170" cy="344" r="12" fill="#38BDF8" filter="url(#coreGlow)"/>
   <circle cx="170" cy="344" r="5" fill="#FFFFFF"/>
 
@@ -63,6 +97,7 @@
   <circle cx="342" cy="168" r="12" fill="#FDE047" filter="url(#coreGlow)"/>
   <circle cx="342" cy="168" r="5" fill="#0F172A"/>
 
+  <!-- Terminal Code Prompt Symbol (>_) inside Core Node -->
   <path d="M 251 251 L 255 256 L 251 261" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   <line x1="257" y1="261" x2="261" y2="261" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round"/>
 </svg>

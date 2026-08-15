@@ -59,7 +59,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "", "expectedOutput": "Hello, Python!"}],
         },
     ],
-    "py-syntax-spec": [
+    "py-coding-standards": [
         {
             "id": "prac-syntax-1", "title": "PEP8 规范注释", "difficulty": "easy",
             "prompt": "为以下函数添加符合 PEP8 规范的单行注释和函数文档字符串。\n\ndef add(a, b):\n    return a + b",
@@ -75,7 +75,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "3\n4", "expectedOutput": "12"}],
         },
     ],
-    "input-output": [
+    "basic-io": [
         {
             "id": "prac-input-1", "title": "基本输入输出体验", "difficulty": "easy",
             "prompt": "编写程序接收用户输入的姓名，并打印欢迎消息 'Hello, {name}!'",
@@ -114,7 +114,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "3\n7", "expectedOutput": "7 3"}],
         },
     ],
-    "operators-expressions": [
+    "operators": [
         {
             "id": "prac-ops-1", "title": "整除与取模", "difficulty": "easy",
             "prompt": "接收两个整数 a, b，输出 a // b 和 a % b。",
@@ -311,7 +311,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "100", "expectedOutput": "212.0"}],
         },
     ],
-    "func-params-return": [
+    "func-params": [
         {
             "id": "prac-param-1", "title": "默认参数", "difficulty": "easy",
             "prompt": "编写 greet(name, greeting='你好') 函数，接收姓名与问候语（有默认值），输出 '{greeting}, {name}!'。",
@@ -402,7 +402,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "5", "expectedOutput": "2.2361\n120"}],
         },
     ],
-    "stdlib-sys": [
+    "stdlib-modules": [
         {
             "id": "prac-sys-1", "title": "sys.argv 读取", "difficulty": "easy",
             "prompt": "使用 sys 模块输出 Python 版本的主版本号（major）和次版本号（minor）。",
@@ -411,16 +411,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "", "expectedOutput": ""}],
         },
     ],
-    "packages-custom": [
-        {
-            "id": "prac-pkg-1", "title": "自定义模块", "difficulty": "medium",
-            "prompt": "假设有模块 mathtools.py 包含 add(a,b) 函数，编写导入并调用它的代码框架（注释说明）。",
-            "starter": "# TODO: 展示如何 import 自定义模块中的函数\n# from mathtools import add\n# print(add(3, 4))\nprint('模块导入示例')\n",
-            "solution": "# from mathtools import add\n# print(add(3, 4))\nprint('模块导入示例')\n",
-            "tests": [{"input": "", "expectedOutput": "模块导入示例"}],
-        },
-    ],
-    "oop-concepts": [
+    "oop-class": [
         {
             "id": "prac-oop-1", "title": "Dog 类创建", "difficulty": "hard",
             "prompt": "创建 Dog 类，拥有 name 与 age 属性，以及 bark() 方法返回 '{name} says Woof!'",
@@ -436,7 +427,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "5", "expectedOutput": "78.54"}],
         },
     ],
-    "class-attributes-methods": [
+    "oop-attributes": [
         {
             "id": "prac-attr-1", "title": "类方法与实例方法", "difficulty": "medium",
             "prompt": "创建 Counter 类，有类变量 count=0，每次实例化时 count+1，提供类方法 get_count() 返回 count。",
@@ -445,7 +436,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "", "expectedOutput": ""}],
         },
     ],
-    "encapsulation-access": [
+    "oop-encapsulation": [
         {
             "id": "prac-encap-1", "title": "私有属性与 getter", "difficulty": "medium",
             "prompt": "创建 BankAccount 类，私有属性 __balance，提供 deposit(amount)、withdraw(amount) 方法和 balance 属性（property）。",
@@ -454,7 +445,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "", "expectedOutput": ""}],
         },
     ],
-    "inheritance-polymorphism": [
+    "oop-inheritance": [
         {
             "id": "prac-inherit-1", "title": "继承与重写", "difficulty": "hard",
             "prompt": "定义基类 Animal，有 speak() 方法返回 'Some sound'。子类 Cat 重写 speak() 返回 'Meow'。",
@@ -463,7 +454,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "", "expectedOutput": "Meow"}],
         },
     ],
-    "file-open-close": [
+    "file-open": [
         {
             "id": "prac-file-1", "title": "文件读取", "difficulty": "medium",
             "prompt": "使用 with open 读取文件 'data.txt' 的内容并打印（假设文件已存在，演示代码结构即可）。",
@@ -481,7 +472,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "hello\nworld\n", "expectedOutput": "2"}],
         },
     ],
-    "file-os-ops": [
+    "file-os": [
         {
             "id": "prac-os-1", "title": "路径操作", "difficulty": "medium",
             "prompt": "使用 os.path 模块，检测当前目录下是否存在 'test.txt'，输出 True 或 False。",
@@ -515,7 +506,7 @@ PRACTICES_BY_NODE: dict[str, list[dict]] = {
             "tests": [{"input": "", "expectedOutput": ""}],
         },
     ],
-    "exceptions-assert-trace": [
+    "exceptions-assert": [
         {
             "id": "prac-assert-1", "title": "断言测试", "difficulty": "medium",
             "prompt": "编写函数 divide(a, b)，使用 assert 断言 b != 0，然后返回 a / b。",

@@ -13,14 +13,13 @@ const showNavTags = ref(false)
 // 快捷导航标签
 const navTags = computed(() => {
   const weakCount = knowledgeStore.weakNodes.length
-  const totalCount = knowledgeStore.nodes.length
   return [
-    { id: 'agent', label: 'AI 导师', icon: '🎓', action: () => { appStore.toggleAgent(); showNavTags.value = false } },
+    { id: 'agent', label: 'AI 导师', icon: '🎓', action: () => { router.push('/agent'); showNavTags.value = false } },
     { id: 'workspace', label: '代码工作区', icon: '💻', action: () => { appStore.openWorkspace('code'); showNavTags.value = false } },
     { id: 'teach', label: '教材精讲', icon: '📖', action: () => { appStore.openWorkspace('teach'); showNavTags.value = false } },
-    { id: 'practice', label: '实战练习', icon: '✏️', action: () => { appStore.openWorkspace('practice'); showNavTags.value = false } },
+    { id: 'practice', label: '实战练习', icon: '✏️', action: () => { router.push('/practice'); showNavTags.value = false } },
+    { id: 'projects', label: '项目实战', icon: '🚀', action: () => { router.push('/projects'); showNavTags.value = false } },
     { id: 'weak', label: `薄弱点 (${weakCount})`, icon: '⚠️', action: () => {
-      // 跳转到第一个薄弱知识点
       if (knowledgeStore.weakNodes.length > 0) {
         const node = knowledgeStore.weakNodes[0]
         appStore.openPanel(node.id)

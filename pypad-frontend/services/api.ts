@@ -147,4 +147,16 @@ export const analyticsApi = {
     apiClient.get('/api/analytics/overview', { params: userId ? { user_id: userId } : {} })
 }
 
+// 教材API
+export const textbookApi = {
+  upload: (data: { content: string; bookTitle?: string }) =>
+    apiClient.post('/api/textbook/upload', data),
+}
+
+// 学习路径推荐API
+export const recommendApi = {
+  getPath: (userId?: string) =>
+    apiClient.get('/api/user/recommend-path', { params: userId ? { user_id: userId } : {} }),
+}
+
 export default apiClient
