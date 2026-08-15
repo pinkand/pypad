@@ -3,7 +3,6 @@ import { ref, nextTick, watch, computed, onMounted } from 'vue'
 import { useAgentStore } from '@/stores/agent'
 import { useKnowledgeStore } from '@/stores/knowledge'
 import { useAppStore } from '@/stores/app'
-import { AGENT_LABELS } from '@/utils/constants'
 import type { AgentType } from '@/types/agent'
 import { agentApi } from '@/services/api'
 
@@ -91,43 +90,13 @@ const sendMessage = async () => {
     }
 
     if (!accumulated) {
-      agentStore.updateLastMessage(generateLocalResponse(message))
+      agentStore.updateLastMessage('⚠️ AI 服务未返回有效响应，请检查后端 LLM 配置。')
     }
   } catch (error) {
-    // 接口不可用时使用静态响应进行渐进模拟
-    const fallback = generateLocalResponse(message)
-    agentStore.updateLastMessage(fallback)
+    agentStore.updateLastMessage('❌ 无法连接到 AI 服务，请确保后端已启动且 LLM 配置正确。')
   } finally {
     isThinking.value = false
   }
-}
-
-
-// Local fallback response
-const generateLocalResponse = (userMessage: string): string => {
-  const selectedNode = knowledgeStore.selectedNode
-  const currentAgent = agentStore.currentAgent
-
-  switch (currentAgent) {
-    case 'tutor':
-      if (selectedNode) {
-        return `📚 **${selectedNode.name}**\n\n${selectedNode.description}\n\n**学习要点：**\n1. 理解核心概念\n2. 掌握基本语法\n3. 实践应用\n\n**当前掌握度：** ${knowledgeStore.getNodeMastery(selectedNode.id)}%\n\n需要我详细讲解某个部分吗？`
-      }
-      break
-    case 'practice':
-      if (selectedNode) {
-        return `📝 **练习生成器**\n\n我将为"${selectedNode.name}"生成练习题：\n\n**题目类型：**\n- 选择题\n- 填空题\n- 编程题\n\n**难度级别：**\n- 基础\n- 中等\n- 进阶\n\n请选择你想要的练习类型和难度。`
-      }
-      break
-    case 'coder':
-      return `💻 **代码分析师**\n\n我可以帮你：\n- 分析代码逻辑\n- 找出潜在问题\n- 优化代码性能\n- 解释代码功能\n\n请粘贴你想要分析的代码。`
-    case 'planner':
-      return `📋 **学习规划师**\n\n我可以帮你制定学习计划：\n\n1. **评估当前水平**\n2. **设定学习目标**\n3. **制定学习路径**\n4. **安排学习时间**\n\n请告诉我你的学习目标是什么？`
-    case 'memory':
-      return `🧠 **记忆管理器**\n\n我可以帮你：\n- 复习容易忘记的知识点\n- 分析错误模式\n- 优化学习方法\n- 追踪学习进度\n\n让我查看你的学习记录...`
-  }
-
-  return `你好！我是${AGENT_LABELS[currentAgent as AgentType]}。\n\n我可以帮助你：\n- 解答Python相关问题\n- 生成练习题\n- 分析代码\n- 制定学习计划\n\n请告诉我你想学习什么？`
 }
 
 // Quick actions

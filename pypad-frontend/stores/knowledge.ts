@@ -267,86 +267,8 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
         }
       })
     } catch (err) {
-      console.warn('API fetch failed, falling back to local python-knowledge.json:', err)
-      try {
-        const localResp = await fetch('/data/python-knowledge.json')
-        const jsonData = await localResp.json()
-        const localNodes = jsonData.nodes || []
-        const localEdges = jsonData.edges || []
-
-        const mappedNodes: KnowledgeNode[] = localNodes.map((n: any) => ({
-          id: n.id,
-          name: n.name,
-          description: n.description || '',
-          category: n.category || '',
-          importance: n.importance || 5,
-          prerequisites: n.prerequisites || [],
-          courseId: 'py-course-1',
-          children: [],
-          masteryScore: masteryMap.value.get(n.id) || 0,
-          mastery: {
-            score: masteryMap.value.get(n.id) || 0,
-            status: (masteryMap.value.get(n.id) || 0) >= 90 ? 'mastered'
-              : (masteryMap.value.get(n.id) || 0) >= 60 ? 'learning'
-              : (masteryMap.value.get(n.id) || 0) > 0 ? 'weak' : 'unlearned',
-          },
-        }))
-
-        edges.value = localEdges.map((e: any) => ({
-          id: e.id || `${e.source || e.source_id}-${e.target || e.target_id}`,
-          source: e.source || e.source_id,
-          target: e.target || e.target_id,
-          relationType: e.relationType || e.relation_type || 'prerequisite',
-          strength: e.strength || 'soft',
-          weight: e.weight,
-        }))
-
-        // Build domain hierarchy for tree view (same as API path)
-        const coreNode: KnowledgeNode = {
-          id: 'python-core', code: 'PY-CORE', name: 'Python核心',
-          description: 'Python编程语言核心知识体系', category: 'Root',
-          importance: 10, prerequisites: [], children: [], courseId: 'py-course-1',
-        }
-
-        const domainNodes: Record<string, KnowledgeNode> = {
-          'env': { id: 'env', name: '基础环境', description: '开发环境搭建与编程规范', category: 'Domain', importance: 9, prerequisites: ['python-core'], children: [], parentId: 'python-core', courseId: 'py-course-1', chapterId: 'chap-1' },
-          'syntax': { id: 'syntax', name: '基本语法', description: '输入输出、变量与运算符', category: 'Domain', importance: 9, prerequisites: ['python-core'], children: [], parentId: 'python-core', courseId: 'py-course-1', chapterId: 'chap-2' },
-          'control': { id: 'control', name: '控制结构', description: '条件分支与循环结构', category: 'Domain', importance: 9, prerequisites: ['python-core'], children: [], parentId: 'python-core', courseId: 'py-course-1', chapterId: 'chap-3' },
-          'ds': { id: 'ds', name: '数据结构', description: '字符串、列表、元组、字典与集合', category: 'Domain', importance: 9, prerequisites: ['python-core'], children: [], parentId: 'python-core', courseId: 'py-course-1', chapterId: 'chap-4' },
-          'func': { id: 'func', name: '函数设计', description: '函数定义、参数传递与作用域', category: 'Domain', importance: 9, prerequisites: ['python-core'], children: [], parentId: 'python-core', courseId: 'py-course-1', chapterId: 'chap-6' },
-          'module': { id: 'module', name: '模块与架构', description: '模块、标准库与第三方包', category: 'Domain', importance: 9, prerequisites: ['python-core'], children: [], parentId: 'python-core', courseId: 'py-course-1', chapterId: 'chap-8' },
-          'oop': { id: 'oop', name: '面向对象', description: '类、对象、封装与继承', category: 'Domain', importance: 9, prerequisites: ['python-core'], children: [], parentId: 'python-core', courseId: 'py-course-1', chapterId: 'chap-9' },
-          'file': { id: 'file', name: '文件与数据', description: '文件 I/O 与持久化存储', category: 'Domain', importance: 9, prerequisites: ['python-core'], children: [], parentId: 'python-core', courseId: 'py-course-1', chapterId: 'chap-10' },
-          'robust': { id: 'robust', name: '程序健壮性', description: '异常处理与调试断言', category: 'Domain', importance: 9, prerequisites: ['python-core'], children: [], parentId: 'python-core', courseId: 'py-course-1', chapterId: 'chap-11' },
-        }
-
-        coreNode.children = Object.values(domainNodes)
-
-        mappedNodes.forEach(n => {
-          let domainId = 'syntax'
-          if (n.category === '基础环境') domainId = 'env'
-          else if (n.category === '基本语法') domainId = 'syntax'
-          else if (n.category === '控制结构') domainId = 'control'
-          else if (n.category === '数据结构') domainId = 'ds'
-          else if (n.category === '函数设计') domainId = 'func'
-          else if (n.category === '模块与架构') domainId = 'module'
-          else if (n.category === '面向对象') domainId = 'oop'
-          else if (n.category === '文件与数据') domainId = 'file'
-          else if (n.category === '健壮性') domainId = 'robust'
-
-          n.parentId = domainId
-          const domainNode = domainNodes[domainId]
-          if (domainNode && domainNode.children) {
-            domainNode.children.push(n)
-          }
-        })
-
-        treeNodes.value = [coreNode]
-        nodes.value = [coreNode, ...Object.values(domainNodes), ...mappedNodes]
-      } catch (fallbackErr) {
-        error.value = '加载知识数据失败'
-        console.error('Failed to load local fallback data:', fallbackErr)
-      }
+      error.value = '加载知识数据失败，请确保后端服务已启动'
+      console.error('Failed to load knowledge data from API:', err)
     } finally {
       loading.value = false
     }

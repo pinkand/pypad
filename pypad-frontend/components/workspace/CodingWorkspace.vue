@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { ref, shallowRef, computed, watch } from 'vue'
+import { ref, shallowRef, computed, watch, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useWorkspaceStore } from '@/stores/workspace'
+import { useKnowledgeStore } from '@/stores/knowledge'
+import { usePracticeStore } from '@/stores/practice'
+import { useSessionStore } from '@/stores/session'
+import { agentApi, workspaceApi, practiceApi } from '@/services/api'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 
 const appStore = useAppStore()
 const workspaceStore = useWorkspaceStore()
+const knowledgeStore = useKnowledgeStore()
+const practiceStore = usePracticeStore()
+const sessionStore = useSessionStore()
 
 const code = ref(`# 在这里编写Python代码\ndef hello():\n    print("Welcome to PyPad!")\n\nhello()\n`)
 
@@ -13,37 +20,60 @@ const output = ref('')
 const isRunning = ref(false)
 const aiEvaluation = ref<{ type: 'success' | 'warning' | 'error' | 'info', message: string } | null>(null)
 
-watch(() => appStore.workspaceMode, (newMode) => {
+// 当前选中的知识点（用于 teach/practice 模式获取后端数据）
+const activeNode = computed(() => {
+  if (!appStore.panelNodeId) return null
+  return knowledgeStore.getNodeById(appStore.panelNodeId)
+})
+
+// Teach 模式内容 — 来自后端知识点 aiSummary
+const teachContent = computed(() => {
+  const node = activeNode.value
+  if (!node?.aiSummary) {
+    return {
+      title: node?.name || 'Python 知识点',
+      overview: node?.description || '请先选择一个知识点',
+      keyPoints: [] as string[],
+      commonPitfalls: [] as string[],
+      codeSnippet: ''
+    }
+  }
+  return {
+    title: node.name,
+    overview: node.aiSummary.overview || node.description,
+    keyPoints: node.aiSummary.keyPoints || [],
+    commonPitfalls: node.aiSummary.commonPitfalls || [],
+    codeSnippet: node.aiSummary.recommendedCodeSnippet || ''
+  }
+})
+
+// Practice 模式数据 — 从后端加载
+const currentPractice = computed(() => practiceStore.currentPractice)
+const practiceLoading = computed(() => practiceStore.loading)
+
+watch(() => appStore.workspaceMode, async (newMode) => {
   output.value = ''
   aiEvaluation.value = null
   isRunning.value = false
+
   if (newMode === 'teach') {
-    code.value = `# 项目3：健康数据分析系统 (BMI评级)
-def calculate_bmi(height, weight):
-    """根据身高(m)和体重(kg)计算 BMI 指数并评级"""
-    bmi = weight / (height ** 2)
-    if bmi < 18.5:
-        return "偏瘦"
-    elif bmi < 24:
-        return "正常"
-    else:
-        return "偏胖"
-
-# 运行看看测试结果
-result = calculate_bmi(1.75, 65)
-print(f"身高 1.75m, 体重 65kg 的评估等级: {result}")
-`
+    // 载入知识点的教学代码
+    const snippet = teachContent.value.codeSnippet
+    code.value = snippet || `# ${teachContent.value.title}\n# 暂无示例代码\nprint("${teachContent.value.title}")\n`
   } else if (newMode === 'practice') {
-    code.value = `# 项目2：简单计算器开发实战
-# 要求：实现 calculator(a, b, op) 函数，支持 '+', '-', '*', '/' 运算。
-
-def calculator(a, b, op):
-    # TODO: 在此处编写你的代码
-    pass
-
-# 测试
-print(calculator(10, 5, '+'))
-`
+    // 从后端加载当前知识点的练习题
+    const nodeId = activeNode.value?.id
+    if (nodeId) {
+      await practiceStore.fetchPracticesByNode(nodeId)
+      if (practiceStore.practices.length > 0) {
+        practiceStore.currentPractice = practiceStore.practices[0]
+        code.value = practiceStore.currentPractice.starterCode || '# 在此编写代码\n'
+      } else {
+        code.value = '# 暂无练习题，请先选择知识点\n'
+      }
+    } else {
+      code.value = '# 请先选择一个知识点\n'
+    }
   } else {
     code.value = `# 自由编码区\ndef hello():\n    print("Welcome to PyPad Python Learning OS!")\n\nhello()\n`
   }
@@ -132,43 +162,114 @@ const runCode = async () => {
   }
 }
 
-const debugCode = () => {
-  output.value = '> Debugging session started...\nBreakpoint hit at line 2.'
-}
+// AI Review — 调用后端 /api/workspace/ai-review
+const aiReview = async () => {
+  isRunning.value = true
+  aiEvaluation.value = null
 
-const explainCode = () => {
-  aiEvaluation.value = {
-    type: 'info',
-    message: 'This code defines a function `hello` that prints a greeting string to the standard output, and then calls the function.'
+  // 先运行代码获取 runId
+  workspaceStore.currentCode = code.value
+  try {
+    const run: any = await workspaceStore.runCode()
+    if (run?.id) {
+      const review: any = await workspaceApi.requestAIReview(run.id)
+      const reviewData = review?.review || review
+      if (reviewData) {
+        aiEvaluation.value = {
+          type: reviewData.overallScore >= 80 ? 'success' : reviewData.overallScore >= 60 ? 'warning' : 'error',
+          message: `代码评分: ${reviewData.overallScore}/100\n${reviewData.aiFeedback || ''}\n${(reviewData.suggestions || []).map((s: string) => `• ${s}`).join('\n')}`
+        }
+      }
+    }
+  } catch (err: any) {
+    aiEvaluation.value = { type: 'error', message: 'AI 代码审查失败，请检查后端服务。' }
+  } finally {
+    isRunning.value = false
   }
 }
 
-const aiReview = () => {
-  aiEvaluation.value = {
-    type: 'warning',
-    message: 'Consider adding type hints (e.g. `def hello() -> None:`) to improve code readability.'
+// AI Explain — 调用后端 /api/agent/chat
+const explainCode = async () => {
+  isRunning.value = true
+  aiEvaluation.value = null
+  try {
+    const res: any = await agentApi.chat({
+      message: `请解释以下 Python 代码的功能和逻辑：\n\`\`\`python\n${code.value}\n\`\`\``,
+      agentType: 'coder',
+      knowledgeId: activeNode.value?.id,
+    })
+    aiEvaluation.value = {
+      type: 'info',
+      message: res?.message || '无法获取代码解释'
+    }
+  } catch (err) {
+    aiEvaluation.value = { type: 'error', message: 'AI 代码解释失败，请检查后端服务。' }
+  } finally {
+    isRunning.value = false
   }
 }
 
-const submitCode = () => {
+// Submit Practice — 调用后端 /api/practices/{id}/submit
+const submitCode = async () => {
+  const practice = currentPractice.value
+  if (!practice) {
+    aiEvaluation.value = { type: 'warning', message: '请先选择一个练习题。' }
+    return
+  }
+
   isRunning.value = true
   output.value = ''
   aiEvaluation.value = null
-  
-  setTimeout(() => {
-    output.value = `> Running Test Cases...\nTest 1 (n=5): Expected 120, Got None ❌\nTest 2 (n=1): Expected 1, Got None ❌`
-    aiEvaluation.value = {
-      type: 'error',
-      message: '你的函数返回了 None。你需要使用 return 关键字返回计算结果。'
+
+  try {
+    const res: any = await practiceApi.submitPractice(practice.id, code.value)
+    const parts: string[] = []
+    parts.push(`> 练习提交结果: ${res.passed ? '✅ 通过' : '❌ 未通过'}`)
+    parts.push(`> 得分: ${res.score}/100`)
+    if (res.details?.length) {
+      parts.push('\n测试用例详情:')
+      res.details.forEach((d: any, i: number) => {
+        parts.push(`  Test ${i + 1}: ${d.passed ? '✅' : '❌'} 期望: ${d.expected}  实际: ${d.actual}`)
+      })
     }
+    parts.push(`\n${res.feedback || ''}`)
+    output.value = parts.join('\n')
+
+    aiEvaluation.value = {
+      type: res.passed ? 'success' : 'error',
+      message: res.feedback || (res.passed ? '全部测试通过！' : '部分测试未通过，请检查代码。')
+    }
+  } catch (err: any) {
+    output.value = `Error: ${err.message || '提交失败'}`
+    aiEvaluation.value = { type: 'error', message: '练习提交失败，请检查后端服务。' }
+  } finally {
     isRunning.value = false
-  }, 1200)
+  }
 }
 
-const hintCode = () => {
-  aiEvaluation.value = {
-    type: 'info',
-    message: '提示：你可以使用循环 (for/while) 或者递归来实现阶乘。'
+// Hint — 调用后端 /api/agent/chat 获取提示
+const hintCode = async () => {
+  isRunning.value = true
+  aiEvaluation.value = null
+  const practice = currentPractice.value
+  const hintContext = practice
+    ? `练习题「${practice.title}」: ${practice.prompt}\n用户当前代码:\n\`\`\`python\n${code.value}\n\`\`\`\n请给出简短提示，不要直接给出答案。`
+    : `用户正在编写代码:\n\`\`\`python\n${code.value}\n\`\`\`\n请给出改进建议。`
+
+  try {
+    const res: any = await agentApi.chat({
+      message: hintContext,
+      agentType: 'practice',
+      knowledgeId: activeNode.value?.id,
+    })
+    aiEvaluation.value = {
+      type: 'info',
+      message: res?.message || '暂无提示'
+    }
+  } catch (err) {
+    aiEvaluation.value = { type: 'error', message: '获取提示失败，请检查后端服务。' }
+  } finally {
+    isRunning.value = false
   }
 }
 </script>
@@ -230,17 +331,22 @@ const hintCode = () => {
                 <span class="badge info-badge">Learning</span>
               </div>
               <div class="teach-content">
-                <h2>Python 函数基础</h2>
-                <p>函数是组织好的，可重复使用的，用来实现单一，或相关联功能的代码段。</p>
+                <h2>{{ teachContent.title }}</h2>
+                <p>{{ teachContent.overview }}</p>
                 
-                <h4>定义函数</h4>
-                <p>你可以定义一个由自己想要功能的函数，以下是简单的规则：</p>
-                <ul>
-                  <li>函数代码块以 <code>def</code> 关键词开头，后接函数标识符名称和圆括号 <code>()</code>。</li>
-                  <li>任何传入参数和自变量必须放在圆括号中间。</li>
-                  <li>函数的第一行语句可以选择性地使用文档字符串—用于存放函数说明。</li>
-                  <li>函数内容以冒号 <code>:</code> 起始，并且缩进。</li>
-                </ul>
+                <template v-if="teachContent.keyPoints.length > 0">
+                  <h4>核心要点</h4>
+                  <ul>
+                    <li v-for="(point, idx) in teachContent.keyPoints" :key="idx">{{ point }}</li>
+                  </ul>
+                </template>
+
+                <template v-if="teachContent.commonPitfalls.length > 0">
+                  <h4>常见陷阱</h4>
+                  <ul>
+                    <li v-for="(pitfall, idx) in teachContent.commonPitfalls" :key="idx">{{ pitfall }}</li>
+                  </ul>
+                </template>
               </div>
             </div>
 
@@ -250,21 +356,23 @@ const hintCode = () => {
                 <h3>实战练习</h3>
                 <span class="badge warning-badge">Challenge</span>
               </div>
-              <div class="practice-content">
-                <h2>计算阶乘</h2>
-                <p>编写一个函数 <code>factorial(n)</code>，接收一个正整数 <code>n</code>，返回 <code>n</code> 的阶乘。</p>
+              <div v-if="practiceLoading" class="practice-content">
+                <p>加载练习题中...</p>
+              </div>
+              <div v-else-if="currentPractice" class="practice-content">
+                <h2>{{ currentPractice.title }}</h2>
+                <p>{{ currentPractice.prompt }}</p>
                 
-                <div class="test-cases">
+                <div v-if="currentPractice.testCases?.length > 0" class="test-cases">
                   <h4>测试用例</h4>
-                  <div class="test-case">
-                    <span class="test-label">输入: <code>5</code></span>
-                    <span class="test-expected">预期输出: <code>120</code></span>
-                  </div>
-                  <div class="test-case">
-                    <span class="test-label">输入: <code>1</code></span>
-                    <span class="test-expected">预期输出: <code>1</code></span>
+                  <div v-for="(tc, idx) in currentPractice.testCases" :key="idx" class="test-case">
+                    <span class="test-label">输入: <code>{{ tc.input || '无' }}</code></span>
+                    <span class="test-expected">预期输出: <code>{{ tc.expectedOutput }}</code></span>
                   </div>
                 </div>
+              </div>
+              <div v-else class="practice-content">
+                <p>暂无练习题，请先选择一个知识点。</p>
               </div>
             </div>
 
@@ -276,30 +384,26 @@ const hintCode = () => {
               </div>
               
               <div class="tutor-section">
-                <h4>Current Context</h4>
-                <p class="tutor-text">Python Functions & Printing</p>
+                <h4>当前知识点</h4>
+                <p class="tutor-text">{{ activeNode?.name || '自由编码模式' }}</p>
               </div>
               
-              <div class="tutor-section">
-                <h4>Suggestions</h4>
-                <ul class="tutor-list">
-                  <li>Try adding parameters to your function</li>
-                  <li>Explore string formatting options</li>
-                </ul>
+              <div v-if="activeNode" class="tutor-section">
+                <h4>知识描述</h4>
+                <p class="tutor-text">{{ activeNode.description }}</p>
               </div>
               
               <div class="tutor-section task-section">
-                <h4>Next Task</h4>
-                <div class="task-card">
+                <h4>快速操作</h4>
+                <div class="task-card" @click="explainCode" style="cursor: pointer">
                   <div class="task-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M22 4L12 14.01l-3-3" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </div>
                   <div class="task-details">
-                    <h5>Create a greeting function</h5>
-                    <p>Pass a name parameter to personalize it.</p>
+                    <h5>AI 代码解释</h5>
+                    <p>点击获取当前代码的详细解释</p>
                   </div>
                 </div>
               </div>
@@ -340,12 +444,6 @@ const hintCode = () => {
                   </template>
 
                   <template v-if="appStore.workspaceMode === 'code'">
-                    <button class="action-btn" @click="debugCode">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 20a8 8 0 100-16 8 8 0 000 16zM12 14a2 2 0 100-4 2 2 0 000 4z"/>
-                      </svg>
-                      Debug
-                    </button>
                     <div class="divider"></div>
                     <button class="action-btn ai-btn" @click="aiReview">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
