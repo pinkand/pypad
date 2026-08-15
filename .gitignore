@@ -53,3 +53,6 @@ __pycache__/
 # AI Tool directories
 .mimocode/
 
+# Qdrant local data
+qdrant_data/
+

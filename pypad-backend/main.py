@@ -25,7 +25,7 @@ from models import (
 from routers.graph import router as graph_router
 
 
-from rag_service import rag_engine
+from qdrant_rag_service import rag_engine
 
 
 # ──────────────────────────────────────────────
